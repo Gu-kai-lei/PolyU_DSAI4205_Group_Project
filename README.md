@@ -1,6 +1,17 @@
-# DSAI4205 Group Project · DataVinci
+# DSAI4205 小组项目 · DataVinci
 
-DSAI4205 Big Data Analytics（2026/27 第一学期）小组项目，占课程总分 25%。
+项目说明、分工和运行方法。
+
+| 姓名 | 学号 |
+|---|---|
+| FENG Dingran | 24128996D |
+| GU Kailei | 24102618D |
+| CHOI CHUN MAN | 24133223D |
+| YANG Qitian | 24128112D |
+| CAO Taihe | 24101734D |
+| YU Guanlin | 24107216D |
+
+DSAI4205 Big Data Analytics小组项目，占总分 25%。
 
 我们组分到 **Dataset 3：Huge crash in the Stock market**，内容是 2022 年 #stockmarketcrash / #bearmarket 推文，任务是做一个文本情感三分类的决策支持系统。
 
@@ -11,7 +22,7 @@ DSAI4205 Big Data Analytics（2026/27 第一学期）小组项目，占课程总
 | 日期 | 交付物 | 占比 |
 |---|---|---|
 | **11/6（周五）23:55** | 中期报告：EDA、清洗、baseline 结果 | 20% |
-| 第 10/11 周周六 14:00–18:00 | 中期答疑会面（需要提前预约） | 含在上一项 |
+| 第 10/11 周周六 14:00–18:00 | 中期答疑会面（WK10） | 含在上一项 |
 | **11/22（周日）23:55** | 展示用 PPT（12 分钟展示） | 20% |
 | **11/22（周日）23:55** | 最终报告 .docx + **单个** .ipynb | 60% |
 
@@ -44,10 +55,10 @@ DSAI4205 Big Data Analytics（2026/27 第一学期）小组项目，占课程总
 
 - 共 1,698 条推文，两列：`text` 和 `text_sentiment`，其中 **0 = Neutral，1 = Positive，2 = Negative**
 - 类别分布：Positive 627 / Neutral 575 / Negative 496，轻度不平衡
-- TF-IDF + LR 初步测试：5 折交叉验证准确率约 62%
-- 已知问题：
-  - 标签和 VADER 打分的一致率是 93.2%，很可能是自动生成的标签
-  - emoji 和引号被替换成了 `__`，还有一部分双重编码造成的乱码
+- 下面这些来自建仓库之前的初步分析，**还没有在仓库里复现**。由 3 号（`00_eda`）和 2 号（`31_label_noise_errors`）在 notebook 里重新计算，并记录方法和数据版本：
+  - TF-IDF + LR 初步测试：5 折交叉验证准确率约 62%
+  - 标签和 VADER 打分的一致率约 93.2%，标签可能由 VADER 自动生成（待验证的假设）
+  - 部分字符被替换成了 `__`（疑似弯引号和 emoji，具体来源待抽样核对），还有一部分双重编码造成的乱码
   - 混有西班牙语、印地语、阿拉伯语等多种语言
   - 9 条完全重复，规范化文本后还有约 71 条近似重复
   - Neutral 类的文本明显比其他两类短
@@ -56,41 +67,33 @@ DSAI4205 Big Data Analytics（2026/27 第一学期）小组项目，占课程总
 
 | # | 成员 | 文本表示 | 分类器 | 公共职责 |
 |---|---|---|---|---|
-| 1 | 待填 | 多语言 SBERT、英文 SBERT、FastText 平均句向量 | SVM | Baseline 和改进版 baseline，汇总 3iii / 3iv 对比，抽取 SBERT 句向量 |
-| 2 | 待填 | 同上 | kNN | 数据清洗和清洗日志，训练自有的 FastText / Word2Vec，标签噪声和错误分析 |
+| 1 | 待填 | 多语言 SBERT、FastText 平均句向量（英文 SBERT 选做） | SVM | Baseline 和改进版 baseline，汇总 3iii / 3iv 对比，抽取 SBERT 句向量 |
+| 2 | 待填 | 同上 | kNN | 数据清洗和清洗日志，训练自有的 FastText（Word2Vec 选做），标签噪声和错误分析 |
 | 3 | 待填 | 同上，加手工特征 | XGBoost | EDA（至少 6 张图），特征工程，SHAP，商业洞察 |
 | 4 | 待填 | 同上 | MLP | 评估框架和固定数据划分，不平衡处理，合并最终 notebook |
 | 5 | 待填 | 冻结 Transformer 的 token 序列、FastText 词向量序列 | TextCNN | 抽取 token 序列，Stacking 集成 |
-| 6 | 待填 | 同上 | BiLSTM + Attention | 项目管理，预约答疑，报告和 PPT 主编 |
+| 6 | 待填 | 同上 | BiLSTM + Attention | 统一各组员报告和 PPT 主编 |
 
-每个人对应的 notebook 见下面的仓库结构，每个 notebook 开头都列了具体任务清单。
+每个人对应的 notebook 见 [notebooks/README.md](notebooks/README.md)，每个 notebook 开头都列了具体任务清单。标"（选做）"的任务等必做部分完成后再做。
 
 ## 仓库结构
 
+每个文件夹里都有自己的 README，点进去可以看到详细说明（例如 notebook 的负责人对照表在 `notebooks/` 里）。
+
 ```
-├─ docs/
-│  ├─ materials/        课程原始资料：项目说明、报告模板、数据集说明
-│  ├─ meetings/         每周会议记录（复制 _template.md）
-│  └─ experiments/      每个人的实验记录（复制 _template.md）
-├─ notebooks/
-│  ├─ 00_eda                     3 号
-│  ├─ 01_cleaning                2 号
-│  ├─ 02_splits                  4 号
-│  ├─ 03_baseline                1 号
-│  ├─ 10_emb_sbert               1 号
-│  ├─ 11_emb_fasttext            2 号
-│  ├─ 12_emb_tokens              5 号
-│  ├─ 20_m1_svm … 25_m6_bilstm   各自的模型
-│  ├─ 30_ensemble                5 号
-│  ├─ 31_label_noise_errors      2 号
-│  ├─ 32_imbalance               4 号
-│  └─ 99_final                   4 号：最终提交的单个 notebook
-├─ src/                 共享代码：config.py（路径、常量）、data.py（读数据）、evaluate.py（统一评分）
-├─ splits/              固定的数据划分 folds.csv（4 号生成）
-├─ results/             每个模型各一个结果 csv
-├─ figures/             报告和 PPT 用的图
-├─ data/                本地数据，不进 Git
-└─ environment.yml
+PolyU_DSAI4205_Group_Project/
+├─ README.md               项目说明、分工和运行方法
+├─ environment.yml         conda 环境配置，所有包固定版本
+├─ .gitignore              排除数据、嵌入和权重
+├─ .gitattributes          统一文本换行和文件类型
+├─ docs/                   课程资料、会议和实验记录、清洗日志、报告草稿
+├─ notebooks/              按 5 个阶段编号的 notebook，每人只改自己负责的
+├─ src/                    全组共用函数：路径和版本号、读取数据、评分、缓存、清洗、FastText
+├─ splits/          [4 号] 固定数据划分 folds_v1.csv，生成后不再修改
+├─ results/                每个模型的评分结果，每次实验一行，带 run_id
+├─ figures/                报告和 PPT 用图
+├─ reports/         [6 号] 已提交的报告和 PPT 存档
+└─ data/                   原始数据、clean_v1 和清洗日志；嵌入与预测缓存不进 Git
 ```
 
 ## 快速开始
@@ -120,7 +123,9 @@ pip install torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/cu12
 
 **3. 准备数据**
 
-数据、嵌入缓存和预测结果都放在共享的 Google Drive 文件夹里。把环境变量 `DATA_ROOT` 设成你本地这个文件夹的路径（PowerShell）：
+原始数据已放在 `data/raw/stock_market_crash_2022.csv`，当前清洗数据与日志放在 `data/clean_v1/`。下载仓库后，默认直接读取这些文件。嵌入缓存和预测结果仍保留在本地或共享 Google Drive。
+
+如果要使用共享网盘，在网盘中保持相同目录结构，并设置 `DATA_ROOT`（PowerShell）：
 
 ```powershell
 setx DATA_ROOT "G:\我的云端硬盘\DSAI4205-Data3"
@@ -138,25 +143,45 @@ jupyter lab
 
 ## 协作规则
 
+- 提交说明请使用中文，简要说明本次改动，方便组员在目录页和提交记录中查看。
+
 - 每个人在自己的分支上开发（例如 `m3-xgboost`），通过 Pull Request 合入 `main`。
 - 只改自己负责的 notebook。要改 `src/` 里的公共代码，先在群里说一声。
-- 结果统一用 `evaluate()` 计算、用 `save_result(row, "m3_xgboost")` 保存到自己的结果文件里，不要多人共用一个 csv。
-- 每个模型都要输出训练集的 OOF 概率和测试集概率（`.npy`，N × 3），放在 `DATA_ROOT/preds/`，集成时要用。
-- 不提交数据、嵌入缓存、模型权重。`.gitignore` 已经排除了这些文件。
+- 每次实验先用 `new_run_id()` 生成一个 run_id。评分用 `evaluate(..., run_id=run_id, params=...)` 计算、`save_result(row, "m3_xgboost")` 保存；OOF 概率和测试集概率用 `save_preds(run_id, ...)` 保存。同一个 run_id 把成绩、超参数和预测文件绑在一起，重跑也不会覆盖旧结果。
+- 仓库仅保留指定的原始 CSV、`clean_v1.csv` 和版本清洗日志；嵌入缓存、预测结果、模型权重及其他本地数据不提交。
 - 每次实验记进 `docs/experiments/mN.md`，每周会议记进 `docs/meetings/`。这些是评分里"迭代过程证据"的来源。
+
+**数据和实验版本**
+
+当前版本号写在 `src/config.py`：`CLEAN_VERSION`（清洗数据）和 `SPLIT_VERSION`（数据划分）。每条评分记录和每个预测文件都会自动记下这两个版本和随机种子。
+
+| 改了什么 | 要做什么 |
+|---|---|
+| 清洗删了行、加了行，或者近似重复的分组（`group_id`）变了 | 升级 `CLEAN_VERSION` 和 `SPLIT_VERSION`，4 号重新生成划分，**所有模型重跑** |
+| 只改了文本处理方式，行和 `group_id` 都没变 | 升级 `CLEAN_VERSION`，划分沿用；用到这列文本的嵌入和模型重跑 |
+| 只改了自己模型的超参数 | 不升级版本，用新的 run_id 重跑自己的模型 |
+
+`load_splits(clean=...)` 会自动检查划分和清洗数据是否对得上，对不上会直接报错。
 
 **不能做的事**
 
-- 把 VADER 分数当特征：标签本身就是 VADER 打的，这样做等于泄露标签。
-- 把 Transformer 和分类器一起微调：Transformer 必须冻结，否则可能被认定为同一个模型兼做嵌入和分类。
+- 把 VADER 分数当特征：标签可能就是 VADER 生成的（待验证），用它当特征等于走捷径，相当于泄露标签。
+- 让近似重复的推文跨训练集和测试集：同一个 `group_id` 必须落在同一折。
 - 在划分之前做 SMOTE 或过采样：只能在训练折内做。
+- 用包含验证折的文本训练自训嵌入：FastText 等要按折训练，测试集文本任何时候都不参与训练。
 - 先划分再去重：必须先去重，否则重复样本会同时出现在训练集和测试集里。
 - 在 baseline 以外用 TF-IDF，包括用 TF-IDF 权重给词向量加权平均。
+
+**我们的实施方案**
+
+- Transformer 类模型（SBERT 等）只用来抽取嵌入、保持冻结，不和分类器一起微调。项目要求嵌入模型和分类模型相互独立，冻结能让这一点没有争议。是否允许微调，答疑时向老师确认。
+- 文本里的 `__` 只还原人工抽样核对过的模式，其余统一替换成占位符，每条规则都记进清洗日志。
 
 ## 原始资料
 
 | 文件 | 内容 |
 |---|---|
 | [DSAI4205_Project_Description.pdf](docs/materials/DSAI4205_Project_Description.pdf) | 项目说明和评分标准 |
-| [DSAI4205_Final_Report_Template.pdf](docs/materials/DSAI4205_Final_Report_Template.pdf) | 老师给的最终报告模板 |
+| [DSAI4205_Final_Report_Template.pdf](docs/materials/DSAI4205_Final_Report_Template.pdf) | 最终报告模板 |
 | [Dataset3_Description.docx](docs/materials/Dataset3_Description.docx) | 数据集说明，包括标签编码 |
+
