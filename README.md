@@ -68,7 +68,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 | # | 成员 | 文本表示 | 分类器 | 公共职责 |
 |---|---|---|---|---|
 | 1 | 待填 | 多语言 SBERT、FastText 平均句向量（英文 SBERT 选做） | SVM | Baseline 和改进版 baseline，汇总 3iii / 3iv 对比，抽取 SBERT 句向量 |
-| 2 | 待填 | 同上 | kNN | 数据清洗和清洗日志，训练自有的 FastText（Word2Vec 选做），标签噪声和错误分析 |
+| 2 | Gu Kailei | 同上 | kNN | 数据清洗和清洗日志，训练自有的 FastText（Word2Vec 选做），标签噪声和错误分析 |
 | 3 | 待填 | 同上，加手工特征 | XGBoost | EDA（至少 6 张图），特征工程，SHAP，商业洞察 |
 | 4 | 待填 | 同上 | MLP | 评估框架和固定数据划分，不平衡处理，合并最终 notebook |
 | 5 | 待填 | 冻结 Transformer 的 token 序列、FastText 词向量序列 | TextCNN | 抽取 token 序列，Stacking 集成 |
