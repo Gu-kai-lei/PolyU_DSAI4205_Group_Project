@@ -1,5 +1,9 @@
+# 统一文本换行和文件类型
 * text=auto
 *.pdf binary
 *.docx binary
 *.pptx binary
 *.png binary
+# CSV 原样存取、不转换换行：推文里本身带换行，转换会改动原始数据
+*.csv -text
+
