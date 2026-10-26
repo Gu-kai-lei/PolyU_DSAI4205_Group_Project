@@ -1,6 +1,13 @@
-# Data, embeddings, predictions and weights live on the shared Google Drive, not in Git
+# 仅原始 CSV、clean_v1 CSV 和对应日志入库；其余数据、缓存和权重保留在本地
 data/*
 !data/README.md
+!data/raw/
+data/raw/*
+!data/raw/stock_market_crash_2022.csv
+!data/clean_v1/
+data/clean_v1/*
+!data/clean_v1/clean_v1.csv
+!data/clean_v1/cleaning_log.md
 emb/
 preds/
 models/
@@ -12,16 +19,17 @@ models/
 *.safetensors
 *.zip
 
-# Secrets
+# 本地密钥配置
 .env
 
-# Python / Jupyter
+# Python 和 Jupyter 缓存
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# OS / editors
+# 操作系统和编辑器临时文件
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
