@@ -1,0 +1,27 @@
+# Data, embeddings, predictions and weights live on the shared Google Drive, not in Git
+data/*
+!data/README.md
+emb/
+preds/
+models/
+*.npy
+*.npz
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.zip
+
+# Secrets
+.env
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
