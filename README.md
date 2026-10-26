@@ -67,7 +67,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 
 | # | 成员 | 模型 | 公共职责 |
 |---|---|---|---|
-| 1 | 待填 | SVM | Baseline、模型总对比表 |
+| 1 | FING Dingran | SVM | Baseline、模型总对比表 |
 | 2 | Gu Kailei | kNN | 数据清洗、FastText、错误分析、PyTorch 训练模板、项目协调 |
 | 3 | 待填 | XGBoost | EDA（至少 6 张图），特征工程，SHAP，商业洞察（讲清楚"数据长什么样"和"结论对投资者有什么用"）|
 | 4 | 待填 | MLP | 数据划分、不平衡处理、合并最终 notebook（保证所有人用同一套训练集和测试集，最后交出一个能从头跑通的 notebook） |
