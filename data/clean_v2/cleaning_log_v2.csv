@@ -37,3 +37,13 @@
 9b,Stratified split,"train/val/test = 70/15/15 stratified by label, random_state=42, after deduplication",dedup before split prevents leakage; fit TF-IDF/vocab on train only,1523,1523,,
 V,Validation: label provenance check,VADER (thresholds +/-0.05) on retained rows: raw text vs text_clean vs hashtags segmented,"agreement raw=92.65%, clean=91.92%, segmented=71.18%. Labels are VADER-generated on the ALREADY-CORRUPTED text (restoring don't/isn't lowers agreement: e.g. 'don't panic' is labelled Negative). Clean text kept; mismatches treated as label noise. Segmenting hashtags would drop agreement sharply, confirming step 3c.",112,1523,,
 F,Final retained dataset,"English, non-duplicate, contains real words, non-empty text_norm","label distribution: {'Positive': 607, 'Negative': 483, 'Neutral': 433}",1523,1523,,
+
+
+1523 条，原始 1698
+| 原因 | 条数 | 其中Neutral |
+|---|---|---|
+| 完全重复 |	9 |	9 |
+| 近似重复（只差 @ 或 emoji 残留）| 23 | 21 |
+| 纯 hashtag / @，没有正文	| 28	| 28 |
+| 非英语（规则判定）|	96	| 68 |
+| 非英语（人工复核）|	19	| 16 |
