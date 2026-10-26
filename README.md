@@ -65,14 +65,14 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 
 ## 分工
 
-| # | 成员 | 文本表示 | 分类器 | 公共职责 |
-|---|---|---|---|---|
-| 1 | 待填 | 多语言 SBERT、FastText 平均句向量（英文 SBERT 选做） | SVM | Baseline 和改进版 baseline，汇总 3iii / 3iv 对比，抽取 SBERT 句向量 |
-| 2 | Gu Kailei | 同上 | kNN | 数据清洗和清洗日志，训练自有的 FastText（Word2Vec 选做），标签噪声和错误分析 |
-| 3 | 待填 | 同上，加手工特征 | XGBoost | EDA（至少 6 张图），特征工程，SHAP，商业洞察 |
-| 4 | 待填 | 同上 | MLP | 评估框架和固定数据划分，不平衡处理，合并最终 notebook |
-| 5 | 待填 | 冻结 Transformer 的 token 序列、FastText 词向量序列 | TextCNN | 抽取 token 序列，Stacking 集成 |
-| 6 | 待填 | 同上 | BiLSTM + Attention | 统一各组员报告和 PPT 主编 |
+| # | 成员 | 模型 | 公共职责 |
+|---|---|---|---|
+| 1 | 待填 | SVM | Baseline、模型总对比表 |
+| 2 | Gu Kailei | kNN | 数据清洗、FastText、错误分析、PyTorch 训练模板、项目协调 |
+| 3 | 待填 | XGBoost | EDA（至少 6 张图），特征工程，SHAP，商业洞察（讲清楚"数据长什么样"和"结论对投资者有什么用"）|
+| 4 | 待填 | MLP | 数据划分、不平衡处理、合并最终 notebook（保证所有人用同一套训练集和测试集，最后交出一个能从头跑通的 notebook） |
+| 5 | 待填 | TextCNN | token 序列、Stacking 集成（给序列模型准备好输入，最后把 6 个模型组合起来给序列模型准备好输入，最后把 6 个模型组合起来）|
+| 6 | 待填 | BiLSTM + Attention | 报告和 PPT 主编 |
 
 每个人对应的 notebook 见 [notebooks/README.md](notebooks/README.md)，每个 notebook 开头都列了具体任务清单。标"（选做）"的任务等必做部分完成后再做。
 
