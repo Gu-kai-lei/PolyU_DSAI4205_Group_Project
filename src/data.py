@@ -8,9 +8,10 @@
 - check_splits(splits, clean)     检查数据划分：必需列、折号合法、同一 group 不跨折、和清洗数据一致
 
 接口约定（2 号和 4 号共同维护）：
-- 清洗数据的列：id, group_id, text_raw, text_full, text_light, label
+- 清洗数据的必需列：id, group_id, text_raw, text_clean, text_norm, label（其余列见各版本的清洗日志）
   - id 是原始文件的行号，永远指向同一条推文，任何版本都不重新编号
-  - group_id 标记近似重复的推文，同一组必须落在同一折；没有近似重复的推文自成一组
+  - group_id 标记近似重复和 text_norm 相同的推文，同一组必须落在同一折；其余推文自成一组
+  - text_clean 给 Transformer（SBERT、token 序列）用；text_norm 给 TF-IDF 和 FastText 用
 - 划分文件的列：id, group_id, split（train / test）, fold（训练集 0–4，测试集 -1）
 """
 from __future__ import annotations
@@ -19,7 +20,7 @@ import pandas as pd
 
 from .config import DATA_ROOT, CLEAN_VERSION, LABELS, N_FOLDS, RAW_CSV, SPLIT_VERSION, SPLITS_DIR
 
-CLEAN_COLUMNS = ["id", "group_id", "text_raw", "text_full", "text_light", "label"]
+CLEAN_COLUMNS = ["id", "group_id", "text_raw", "text_clean", "text_norm", "label"]
 SPLIT_COLUMNS = ["id", "group_id", "split", "fold"]
 
 
@@ -59,7 +60,7 @@ def check_clean(df: pd.DataFrame) -> None:
     unknown = set(df["label"]) - set(LABELS)
     if unknown:
         raise ValueError(f"清洗数据出现未知标签：{sorted(unknown)}")
-    for col in ("text_full", "text_light"):
+    for col in ("text_clean", "text_norm"):
         empty = df[col].isna() | (df[col].astype(str).str.strip() == "")
         if empty.any():
             raise ValueError(f"{col} 有 {int(empty.sum())} 行为空，清洗时应删除或处理")

@@ -9,7 +9,7 @@
 - 以上每种的 _full 版本：用全部训练集训练，覆盖训练集和测试集，用来预测测试集
 
 函数一览：
-- tokenize(text_full)                            text_full 按空格切词
+- tokenize(text_norm)                            text_norm 按空格切词
 - train_fasttext(token_lists)                    在给定文本上训练 FastText（skip-gram，结果可复现）
 - mean_vectors(model, token_lists)               每条推文的词向量平均
 - SIFEncoder(model, train_tokens).encode(...)    SIF 加权平均（词频只用训练部分统计），再去掉第一主成分
@@ -46,9 +46,9 @@ def _stable_hash(text) -> int:
     return zlib.crc32(str(text).encode("utf-8"))
 
 
-def tokenize(text_full: str) -> list[str]:
-    """text_full 已经是小写、去标点、词形还原过的文本，按空格切开即可。"""
-    return text_full.split()
+def tokenize(text_norm: str) -> list[str]:
+    """text_norm 已经是小写、去标点、词形还原过的文本，按空格切开即可。"""
+    return text_norm.split()
 
 
 def train_fasttext(token_lists: list[list[str]], params: dict | None = None):
@@ -124,7 +124,7 @@ def build_fold_embeddings(clean: pd.DataFrame, splits: pd.DataFrame, max_len: in
     clean 是 load_clean() 的输出，splits 是 load_splits() 的输出。概况包括训练文本数、词表大小和编码的推文数；
     full 版本的模型只返回、不保存（子词表很大），用来查看近邻词。
     """
-    tokens = dict(zip(clean["id"], clean["text_full"].map(tokenize)))
+    tokens = dict(zip(clean["id"], clean["text_norm"].map(tokenize)))
     dev = splits[splits["split"] == "train"]
     dev_ids = dev["id"].to_numpy()
     all_ids = splits["id"].to_numpy()

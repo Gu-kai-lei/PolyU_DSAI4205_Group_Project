@@ -1,26 +1,113 @@
-# Data cleaning log
+# clean_v2 cleaning log
 
-| Step | Operation | Rationale | Rows affected | Rows remaining | Example (before → after) | Details |
-|---|---|---|---|---|---|---|
-| 0 | Load raw data | Original CSV; one row is one tweet; id = row number in the raw file | 0 | 1698 |  |  |
-| 1 | Remove exact duplicates | The same tweet text appears more than once (labels agree); first copy kept | 9 | 1689 | #stockmarketcrash |  |
-| 2 | Repair encoding and HTML entities | Double-encoded UTF-8 repaired with ftfy (estÃ©s → estés); HTML entities unescaped (&amp; → &) | 155 | 1689 | Mientras estÃ©s vendiendo en el bear market, alguien es… → Mientras estés vendiendo en el bear market, alguien est… |  |
-| 3 | Replace user mentions | @username → @user: names carry no sentiment and often contain underscores | 277 | 1689 | …. Why, just why?!! ⏎ @opensea #BearMarket #BearOpenSea … → …. Why, just why?!! ⏎ @user #BearMarket #BearOpenSea #ET… |  |
-| 4 | Restore verified contractions | In the source file the apostrophe ’ and the next character became '__' (it’s → it__, you’re → you__e). Only patterns checked by hand against every occurrence are restored | 166 | 1689 | It__ finally here!  #StockMarketcrash → It's finally here!  #StockMarketcrash | 's: 80, n't: 77, 're/'ve: 27, I'm: 16, 'll: 9, y'all: 3, I've: 2 |
-| 5 | Remove unreadable tweets | Non-Latin scripts whose original bytes were lost in the source file (ftfy cannot repair them): ≥ 2 mojibake residues and < 4 readable words | 22 | 1667 | à¤¹à¤®à¥_ à¤¤à à¤¶àà¤¤° à¤¨à à¤²àà¤_¤¾... ⏎ à¤²à¤¡à¤¼àà¤¿à¤¯à¥_ à¤à¤ à… |  |
-| 6 | Replace unrecoverable characters with [UNK] | Remaining '__' runs (emoji, symbols or possessive 's, which cannot be told apart) and leftover mojibake | 460 | 1667 | #ETH is gone_¦ð_#Ethereum #cryptocurrencies #bearmarket → #ETH is gone [UNK] #Ethereum #cryptocurrencies #bearmar… | 1233 replacements |
-| 7 | Detect language (flag only) | langdetect on the tweet body without hashtags and mentions; < 15 letters → 'und'. Readable non-English tweets are kept and flagged in the lang column | 258 | 1667 |  | en: 1409, und: 133, es: 23, fr: 17, it: 12, id: 10, no: 7, et: 6 |
-| 8 | Normalise hashtags and whitespace | Remove '#', split CamelCase hashtags (#StockMarketCrash → Stock Market Crash); merge newlines and spaces | 1667 | 1667 | #bearmarket i expect retest of 30k by end of jan → bearmarket i expect retest of 30k by end of jan |  |
-| 9 | Remove content duplicates | Tweets identical after lowercasing and removing mentions, placeholders and punctuation (e.g. '@user #bearmarket' vs '#bearmarket'); first copy kept | 13 | 1654 | #bearmarket |  |
-| 10 | Build text_full | Expand contractions (don't → do not), lowercase, keep letters only (drops punctuation and digits), POS-aware WordNet lemmatisation, remove NLTK stopwords except negations (no, not, never…) | 1654 | 1654 | bearmarket i expect retest of 30k by end of jan → bearmarket expect retest end jan |  |
-| 11 | Remove tweets with no words left | Only mentions, emoji or symbols remained; nothing to classify | 0 | 1654 |  |  |
-| 12 | Group near-duplicates | Token Jaccard ≥ 0.7 (tweets with ≥ 5 tokens) on the content key; a group must stay in one fold | 10 | 1654 |  | 5 groups |
-| 13 | Final dataset | Columns: id, group_id, text_raw, text_full, text_light, label, lang, n_restored, n_unk | 0 | 1654 |  |  |
+Produced by `data/clean_v2/clean_v2.py` from `data/raw/stock_market_crash_2022.csv`. Re-running the script reproduces these numbers exactly.
 
-## Notes
+## Summary
 
-- Data version: clean_v1. Produced by notebooks/01_data/01_cleaning.ipynb with src/cleaning.py.
-- [UNK] marks a character that cannot be recovered from the source file: an emoji, a symbol, or a possessive 's (the source replaced the apostrophe and the following character with '__'). In text_full it appears as the token 'unk'.
-- Readable non-English tweets are kept and flagged in the lang column (247 rows, of which 122 are too short to tell).
-- group_id links near-duplicate tweets; 02_splits must keep every group inside one fold.
-- Extra columns: lang (detected language), n_restored (contractions restored), n_unk (characters replaced by [UNK]).
+- Raw tweets: 1,698; retained: **1,525**; removed: 173.
+- Removed rows stay in `clean_v2_all.csv` with `keep = 0` and a `drop_reason`, so every removal can be audited or reversed in an ablation experiment.
+
+| Label | Raw | Retained | Retained share |
+|---|---|---|---|
+| Positive | 627 | 607 | 39.8% |
+| Neutral | 575 | 433 | 28.4% |
+| Negative | 496 | 485 | 31.8% |
+
+Largest / smallest class after cleaning: 1.40.
+
+## Steps
+
+| Step | Operation | Rule | Rationale | Rows affected | Rows remaining | Example | Details |
+|---|---|---|---|---|---|---|---|
+| 0 | Load raw data | read the course CSV; id = row number in the raw file; label_name from the dataset description | stable ids let every later file (splits, embeddings, predictions) align on the same tweet | 1698 | 1698 |  |  |
+| 1 | Check missing and empty values | isna() on both columns; whitespace-only text | required by the brief; none found, so nothing is imputed or removed | 0 | 1698 |  |  |
+| 2 | Remove exact duplicates | identical raw text; first copy kept (labels of all copies agree) | duplicates inflate counts and leak between train and test | 9 | 1689 | #stockmarketcrash |  |
+| 3 | Repair encoding and HTML entities | ftfy.fix_text, then html.unescape | double-encoded UTF-8 ('estÃ©s') and '&amp;' are scraping artefacts, not user text | 155 | 1689 | Mientras estÃ©s vendiendo en el bear market, algui… → Mientras estés vendiendo en el bear market, alguie… |  |
+| 4 | Remove unreadable tweets | >= 2 mojibake residues, < 4 readable words and < 50 % Latin letters | non-Latin scripts whose bytes were lost in the source file; no model can read them | 21 | 1668 | à¤¹à¤®à¥_ à¤¤à à¤¶àà¤¤° à¤¨à à¤²àà¤_¤¾... ⏎ à¤²à¤¡à¤¼àà¤¿à¤¯… |  |
+| 5 | Anonymise mentions | @handle -> @user (count kept in n_mentions) | handles carry no sentiment, often contain underscores, and are personal data | 273 | 1668 | …. Why, just why?!! ⏎ @opensea #BearMarket #BearOpe… → …. Why, just why?!! ⏎ @user #BearMarket #BearOpenSe… |  |
+| 6 | Restore verified contractions | it__ -> it's, don__ -> don't, you__e -> you're / you've (by the next word) | the source replaced the apostrophe and the next character with '__'; restored text keeps negations | 166 | 1668 | It__ finally here!  #StockMarketcrash → It's finally here!  #StockMarketcrash | 's: 80, n't: 77, 're/'ve: 27, I'm: 16, 'll: 9, y'all: 3, I've: 2 |
+| 7 | Remove lost characters | delete '_' runs and mojibake residue outside #/@/$ tokens; flag emoji_lost = 1; merge newlines and repeated spaces | the original emoji and symbols cannot be recovered; a placeholder would be read as text by transformers | 453 | 1668 | #ETH is gone_¦ð_#Ethereum #cryptocurrencies #bearm… → #ETH is gone #Ethereum #cryptocurrencies #bearmark… |  |
+| 8a | Remove non-English tweets (rules) | non-Latin script > 30 % of letters; OR >= 2 Hinglish function words (>= 15 % of words); OR >= 3 stopwords of one other language and more than twice the English stopwords; OR langdetect non-English with p >= 0.80 and < 50 % of words found in an English word list | VADER only reads English, so these labels are artefacts | 84 | 1584 | Mientras estÃ©s vendiendo en el bear market, alguien estarÃ¡… | label mix: {'Neutral': 59, 'Positive': 15, 'Negative': 10} |
+| 8b | Remove non-English tweets (manual list) | 20 ids listed in clean_v2.py, each read in full | language detection is unreliable on short or romanised text | 18 | 1566 | Pura market down..  ⏎  ⏎ Aek akela #TCS Upper ____ ⏎  ⏎ #sto… | label mix: {'Neutral': 15, 'Positive': 3} |
+| 9 | Remove tweets without words | no word of >= 2 letters once hashtags, mentions and cashtags are removed | nothing to classify; these tweets are Neutral by default, which would teach a 'no text = Neutral' shortcut | 39 | 1527 | #stockmarketcrash | label mix: {'Neutral': 39} |
+| 10 | Normalise hashtags | '#StockMarketCrash' -> 'StockMarketCrash' (no word splitting); stray '#' removed; list kept in hashtags | VADER scored each hashtag as one unknown token; splitting would add sentiment the labeller never saw | 1527 | 1527 | #bearmarket i expect retest of 30k by end of jan → bearmarket i expect retest of 30k by end of jan |  |
+| 11 | Remove content duplicates | same text after lowercasing and removing @user, punctuation and lost characters; first copy kept | copies that differ only by tagged account, emoji or punctuation | 2 | 1525 | yes please and thank you  #stockmarketcrash | 0 rows in groups with conflicting labels |
+| 12 | Build text_norm | expand contractions; lowercase; letters only; POS-aware WordNet lemmatisation; NLTK stopwords removed except negations and direction / intensity words | bag-of-words input for TF-IDF and FastText; negations and up/down/below flip the meaning of market tweets | 1525 | 1525 | I don't see it. stockmarketcrash → not see stockmarketcrash |  |
+| 13 | Remove empty text_norm | nothing left after normalisation | no input for bag-of-words models | 0 | 1525 |  |  |
+| 14 | Group related tweets | union of: token Jaccard >= 0.7 (>= 5 tokens), identical text_norm, and duplicates with their first copy; group_id = smallest raw id in the group | 02_splits keeps a group inside one fold, so templates such as 'Candle of day … closed' never straddle train and test | 20 | 1525 |  | 8 groups among retained tweets |
+| 15 | Engineer features | lengths, hashtag / mention / cashtag counts, ! and ?, caps_ratio, hashtag_ratio, is_hashtag_spam (>= 0.6), domain_crypto / india / us from hashtags and cashtags | signals that normalisation removes, for XGBoost and EDA; VADER is not a feature (label leakage) | 1525 | 1525 |  |  |
+| F | Final dataset | English, readable, non-duplicate tweets that contain words | label distribution: {'Positive': 607, 'Negative': 485, 'Neutral': 433} | 0 | 1525 |  |  |
+
+## Removed rows
+
+| Reason | Rows | Examples |
+|---|---|---|
+| non_english | 84 | Mientras estÃ©s vendiendo en el bear market, …; Bhai sare Fintwits ne toh paisa banaya hai aj… |
+| no_content | 39 | #stockmarketcrash; @CoinFlashx #JusticeForJohnnyDepp  ⏎ #stockma… |
+| unreadable_encoding | 21 | à¤¹à¤®à¥_ à¤¤à à¤¶àà¤¤° à¤¨à à¤²àà¤_¤¾... ⏎ à…; #stockmarketcrash à´´±àµ_´±à´¿à_àµ__àµ |
+| non_english_manual | 18 | Pura market down..  ⏎  ⏎ Aek akela #TCS Upper…; @JasonBo68354014 Ladki ka chakkar babu bhaiya… |
+| exact_duplicate | 9 | #stockmarketcrash; #stockmarketcrash |
+| content_duplicate | 2 | yes please and thank you  #stockmarketcrash; US economy going towards double digit inflati… |
+
+## Columns of clean_v2.csv
+
+| Column | Type | Meaning | Used by (member) |
+|---|---|---|---|
+| id | int | Row number in data/raw/stock_market_crash_2022.csv; never renumbered | all files align on it |
+| group_id | int | Related tweets (duplicates, near-duplicates, identical text_norm) share one id | 4: 02_splits |
+| label | int | Given label: 0 Neutral, 1 Positive, 2 Negative | all models |
+| label_name | str | Label as text | EDA, charts |
+| text_raw | str | Original tweet, unchanged | EDA, error analysis |
+| text_clean | str | Encoding repaired, @user, contractions restored, lost characters removed, '#' removed (hashtags not split); case and punctuation kept | 1: Sentence-BERT; 5: token sequences |
+| text_norm | str | text_clean lowercased, letters only, lemmatised, stopwords removed except negations and direction words | 1: TF-IDF baseline; 2: FastText |
+| hashtags | str | Hashtags of the tweet, lowercase, space-separated | 3: EDA, features |
+| lang | str | en, or short (too short to detect); other values only appear in clean_v2_all.csv | EDA |
+| emoji_lost | int | 1 if the source file destroyed characters in this tweet (usually emoji) | 3: features, error analysis |
+| char_len / word_len | int | Length of text_clean in characters / words | 3: EDA, XGBoost |
+| n_hashtags / n_mentions / n_cashtags | int | Counts in the repaired text before anonymisation | 3: XGBoost |
+| n_exclaim / n_question | int | Number of ! and ? in text_clean | 3: XGBoost |
+| caps_ratio | float | Upper-case share of the letters in text_clean | 3: XGBoost |
+| hashtag_ratio / is_hashtag_spam | float / int | Hashtags per token; flag when >= 0.6 | 3: XGBoost, EDA |
+| domain_crypto / domain_india / domain_us | int | Market mentioned in hashtags or cashtags | 3: business insight |
+
+`clean_v2_all.csv` has the same columns plus `keep` (1/0) and `drop_reason`, for all 1,698 raw tweets.
+
+## Evidence behind the design decisions
+
+**Hashtags are not split.** Agreement between VADER and the given labels on the retained tweets:
+
+| Text given to VADER | Agreement |
+|---|---|
+| raw text | 92.7% |
+| text_clean (hashtags kept whole) | 91.9% |
+| hashtags split on CamelCase (clean_v1 style) | 88.1% |
+| 'stockmarketcrash' split into words | 71.1% |
+
+Splitting hashtags adds words such as *crash* that the labeller never saw, so agreement drops. The small gap between raw text and text_clean comes mostly from restored contractions: of the 15 tweets where VADER matches the label on the raw text but not on text_clean, 13 contain a restored contraction. The labeller saw 'shouldn__ worry' (no negation, so Negative); the cleaned text says 'shouldn't worry'. These tweets are label noise caused by the corrupted source text, not cleaning errors.
+
+**Non-English tweets are removed.** Label mix of the removed non-English tweets: {'Neutral': 74, 'Positive': 18, 'Negative': 10}. VADER scores text it cannot read as 0, which becomes Neutral. Of the 28 removed non-English tweets labelled Positive or Negative, 27 get the same label from VADER on the raw text: their sentiment comes from words VADER reads as English, such as Spanish *sin* ('without'), German *die* ('the'), Italian *dire* ('to say') and Romanian *care* ('which').
+
+**Tweets without words are removed.** Label mix: {'Neutral': 39}.
+
+**Negations and direction words are kept in text_norm.** Retained tweets whose text_norm contains: *not* 307, *no* 69, *never* 22, *up* 84, *down* 102, *below* 23, *more* 81. Standard NLTK stopword lists would delete all of them.
+
+**Template tweets are grouped.** 20 retained tweets fall into 8 groups (near-duplicates or identical text_norm, e.g. 'Candle of day … closed'); a group must stay inside one fold.
+
+VADER is used only for this analysis and must never be a model feature.
+
+## Changes from clean_v1
+
+- Columns renamed: `text_light` → `text_clean`, `text_full` → `text_norm`; added `label_name`, `hashtags`, `emoji_lost` and 13 feature columns; dropped `n_restored` and `n_unk`.
+- Hashtags are no longer split on CamelCase.
+- Lost characters are removed and flagged instead of being replaced by `[UNK]`.
+- Non-English tweets and tweets without words are removed (they stay in `clean_v2_all.csv`).
+- Direction and intensity words (up, down, below, more …) survive stopword removal.
+- `group_id` also joins tweets with identical `text_norm`, which fixes template tweets crossing train and test.
+- The unreadable-tweet rule also requires < 50 % Latin letters, so 'Rug pull 100% Ahead' is kept.
+
+## Reproduce
+
+```bash
+conda activate dsai4205
+python data/clean_v2/clean_v2.py
+```

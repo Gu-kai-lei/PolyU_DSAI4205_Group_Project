@@ -1,4 +1,4 @@
-# 仅原始 CSV、clean_v1 CSV 和对应日志入库；其余数据、缓存和权重保留在本地
+# 仅原始 CSV 和各版本清洗结果入库；其余数据、缓存和权重保留在本地。新增清洗版本时在这里放行它的文件夹
 data/*
 !data/README.md
 !data/raw/
@@ -8,6 +8,12 @@ data/raw/*
 data/clean_v1/*
 !data/clean_v1/clean_v1.csv
 !data/clean_v1/cleaning_log.md
+!data/clean_v2/
+data/clean_v2/*
+!data/clean_v2/clean_v2.csv
+!data/clean_v2/clean_v2_all.csv
+!data/clean_v2/clean_v2_log.md
+!data/clean_v2/clean_v2.py
 emb/
 preds/
 models/

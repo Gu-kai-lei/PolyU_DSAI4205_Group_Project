@@ -1,433 +1,706 @@
+"""clean_v2: data-cleaning recipe for DSAI4205 Dataset 3 ("Huge crash in the Stock market").
+
+Run from the repository root (inside the dsai4205 conda environment):
+
+    python data/clean_v2/clean_v2.py
+
+It reads data/raw/stock_market_crash_2022.csv and writes three files next to this script:
+
+    clean_v2.csv       retained tweets; every model reads it through src.data.load_clean()
+    clean_v2_all.csv   all 1,698 raw tweets with keep / drop_reason, for ablations and auditing
+    clean_v2_log.md    step-by-step log, data dictionary and the evidence behind each design decision
+
+The recipe is frozen with this data version: a later version gets its own folder and script. It only uses
+packages from environment.yml (pandas, ftfy, langdetect, nltk, vaderSentiment) and is deterministic, so
+running it twice produces byte-identical files.
+
+Design decisions (numbers are recomputed and written to clean_v2_log.md on every run):
+  * The labels are very likely VADER compound scores on the raw text. Hashtags are therefore NOT split into
+    words ('#StockMarketCrash' stays one token) because VADER never saw the split words.
+  * Non-English tweets and tweets without any words are removed: VADER cannot read them, so their labels are
+    almost always Neutral by default. They stay in clean_v2_all.csv for ablation experiments.
+  * Characters the source file destroyed (emoji, curly quotes) are removed and flagged in emoji_lost instead
+    of being replaced by a placeholder token.
+  * Negations and direction words (not, up, down, below ...) survive stopword removal in text_norm.
+  * group_id joins near-duplicates AND tweets with identical text_norm (template tweets), so a group never
+    straddles train and test.
 """
-DSAI4205 Group Project (DataVinci) - Dataset 3: Huge crash in the Stock market
-Data cleaning pipeline, version 2 (clean_v2)
+from __future__ import annotations
 
-Input : stock_market_crash_2022.csv  (columns: text, text_sentiment; 1=Positive, 0=Neutral, 2=Negative)
-Output: clean_v2.csv                 retained rows, cleaned text + engineered features + split
-        clean_v2_all_flagged.csv     all 1698 raw rows with keep flag and drop_reason (for ablations)
-        cleaning_log_v2.csv          step-by-step log (operation, rule, rationale, rows affected)
-
-Key design decisions (see cleaning_log_v2.csv for counts):
-  * Labels agree with VADER on the raw text for 93.2% of rows, so they are lexicon-generated weak labels.
-    Therefore: hashtags are NOT word-segmented (VADER saw '#stockmarketcrash' as one token, score 0;
-    'stock market crash' would score -0.40), negations are preserved, and VADER is never used as a feature.
-  * Non-English tweets are removed from the main set: VADER only knows English, so their 'Neutral'
-    labels are artefacts. They stay in clean_v2_all_flagged.csv for an ablation experiment.
-
-Usage: python clean_v2.py <raw_csv> <out_dir>
-"""
 import html
 import re
-import sys
-import unicodedata
+import warnings
+from collections import Counter
 from pathlib import Path
 
-import ftfy
 import numpy as np
 import pandas as pd
-import spacy
-from langdetect import DetectorFactory, detect_langs
-from wordfreq import available_languages, zipf_frequency
-from sklearn.model_selection import train_test_split
 
-SEED = 42
-DetectorFactory.seed = 0
-LABEL_NAMES = {1: "Positive", 0: "Neutral", 2: "Negative"}
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[1]
+RAW_CSV = ROOT / "data" / "raw" / "stock_market_crash_2022.csv"
+NLTK_DIR = ROOT / "data" / "nltk_data"
+NLTK_PACKAGES = ("stopwords", "wordnet", "omw-1.4", "averaged_perceptron_tagger_eng", "words")
+VERSION = "clean_v2"
+LABEL_NAMES = {0: "Neutral", 1: "Positive", 2: "Negative"}
 
-RAW = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("stock_market_crash_2022.csv")
-OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(".")
-OUT.mkdir(parents=True, exist_ok=True)
+KEY_COLUMNS = ["id", "group_id", "label", "label_name"]
+TEXT_COLUMNS = ["text_raw", "text_clean", "text_norm", "hashtags"]
+FEATURE_COLUMNS = ["lang", "emoji_lost", "char_len", "word_len", "n_hashtags", "n_mentions", "n_cashtags",
+                   "n_exclaim", "n_question", "caps_ratio", "hashtag_ratio", "is_hashtag_spam",
+                   "domain_crypto", "domain_india", "domain_us"]
+COLUMNS = KEY_COLUMNS + TEXT_COLUMNS + FEATURE_COLUMNS
 
-LOG = []
-
-
-def log(step, operation, rule, rationale, affected, remaining, before="", after=""):
-    LOG.append(dict(step=step, operation=operation, rule=rule, rationale=rationale,
-                    rows_affected=int(affected), rows_remaining=int(remaining),
-                    example_before=before[:200], example_after=after[:200]))
-
-
-def first_change(before: pd.Series, after: pd.Series):
-    m = before != after
-    if not m.any():
-        return "", ""
-    i = m.idxmax()
-    return before[i], after[i]
+# --------------------------------------------------------------------------------------------------------------
+# Encoding and Twitter tokens
+# --------------------------------------------------------------------------------------------------------------
+MENTION = re.compile(r"@\w+")
+HASHTAG = re.compile(r"#(\w+)")
+CASHTAG = re.compile(r"\$[A-Za-z]{1,6}\b")
+PROTECTED = re.compile(r"([#@$][A-Za-z0-9_]+)")  # hashtag / mention / cashtag tokens keep inner underscores
 
 
-# --------------------------------------------------------------------------------------
-# Step 0. Load
-# --------------------------------------------------------------------------------------
-df = pd.read_csv(RAW)
-df.insert(0, "raw_id", np.arange(len(df)))
-df = df.rename(columns={"text": "text_raw", "text_sentiment": "label"})
-df["label_name"] = df["label"].map(LABEL_NAMES)
-df["keep"] = True
-df["drop_reason"] = ""
-N0 = len(df)
-assert df["label"].isin(LABEL_NAMES).all()
-log("0", "Load raw data", "read CSV; add raw_id; map label 1/0/2 -> Positive/Neutral/Negative",
-    "traceable IDs and readable labels; macOS junk files in the zip (__MACOSX, .DS_Store) ignored",
-    N0, N0)
-n_missing = int(df[["text_raw", "label"]].isna().any(axis=1).sum()
-                + (df["text_raw"].astype(str).str.strip() == "").sum())
-log("0b", "Check missing / empty values", "isna() on text and label; whitespace-only text",
-    "required by brief; none found, so no imputation or removal needed", n_missing, N0)
+def fix_encoding(text: str) -> str:
+    """Repair double-encoded UTF-8 ('estÃ©s' -> 'estés') and unescape HTML entities ('&amp;' -> '&')."""
+    import ftfy
 
-t = df["text_raw"].astype(str)
-
-# --------------------------------------------------------------------------------------
-# Step 1. Encoding repair
-# --------------------------------------------------------------------------------------
-t1 = t.map(lambda x: ftfy.fix_text(x, unescape_html=False))
-b, a = first_change(t, t1)
-log("1a", "Fix mojibake", "ftfy.fix_text (double-encoded UTF-8, e.g. 'estÃ©s' -> 'estés')",
-    "restore original characters so tokens and language detection work", (t != t1).sum(), N0, b, a)
-t2 = t1.map(html.unescape)
-b, a = first_change(t1, t2)
-log("1b", "Decode HTML entities", "html.unescape ('&amp;' -> '&', '&gt;' -> '>')",
-    "entities are scraping artefacts, not user text", (t1 != t2).sum(), N0, b, a)
-t3 = t2.map(lambda s: unicodedata.normalize("NFC", s))
-t3 = t3.str.replace(r"\s+", " ", regex=True).str.strip()
-b, a = first_change(t2, t3)
-log("1c", "Unicode NFC + whitespace", "NFC normalisation; newlines/tabs/multiple spaces -> one space",
-    "consistent representation; NFC used instead of NFKC because NFKC turns residue '¾' into digits '3⁄4'",
-    (t2 != t3).sum(), N0, b, a)
-
-# --------------------------------------------------------------------------------------
-# Step 2. Underscore corruption: curly apostrophes and emoji were replaced by '_' during scraping
-# --------------------------------------------------------------------------------------
-S_STEMS = {"it", "that", "what", "there", "here", "he", "she", "who", "how", "where", "let",
-           "everyone", "everything", "nobody", "something", "one"}
-NT_STEMS = {"don", "can", "isn", "doesn", "won", "didn", "haven", "couldn", "shouldn", "ain",
-            "wasn", "aren", "wouldn", "hasn", "weren", "mustn", "hadn"}
-PRON = {"i", "you", "we", "they", "he", "she", "it", "that", "there", "who"}
+    return html.unescape(ftfy.fix_text(text))
 
 
-def fix_contraction(m):
-    stem, suf = m.group(1), m.group(2)
-    s, x = stem.lower(), suf.lower()
-    if x == "" and s in NT_STEMS:
-        return stem + "'t"
-    if x == "" and s in S_STEMS:
-        return stem + "'s"
-    if x == "" and s == "i":
-        return stem + "'m"
-    if s in PRON and x == "e":          # you__e: "you're" (could also be "you've"; 're is more frequent)
-        return stem + ("'ve" if s == "i" else "'re")
-    if s in PRON and x in {"l", "ll"}:  # I__l -> I'll
-        return stem + "'ll"
-    if s in PRON and x == "d":
-        return stem + "'d"
-    if s == "y" and x == "ll":          # y__ll -> y'all
-        return "y'all"
-    return None
+# Runs of Latin-1 Supplement characters (U+0080-U+00FF) that contain a C1 control character, or are at least two
+# characters long and contain a symbol ('à¤', 'ï¸', '¤£'), are leftovers of bytes the source file destroyed.
+# A single 'é', '«', '¿' or '£' is a real character and is kept.
+LATIN1_RUN = re.compile("[\u0080-ÿ]+")
 
 
-CONTR = re.compile(r"(?<![\w#@])([A-Za-z]+)__(?!_)([A-Za-z]{0,2})(?![A-Za-z0-9_])")
+def _is_residue(run: str) -> bool:
+    has_c1 = any("\u0080" <= ch <= "\u009f" for ch in run)
+    has_symbol = any(" " <= ch <= "¿" for ch in run)
+    return has_c1 or (len(run) >= 2 and has_symbol)
 
 
-def repair_contractions(s):
-    def rep(m):
-        r = fix_contraction(m)
-        if r is None:
-            return m.group(0)
-        return r.upper() if m.group(1).isupper() and len(m.group(1)) > 1 else r  # DON__ -> DON'T
-    return CONTR.sub(rep, s)
+def count_residue(text: str) -> int:
+    return sum(_is_residue(m.group()) for m in LATIN1_RUN.finditer(text))
 
 
-t4 = t3.map(repair_contractions)
-b, a = first_change(t3, t4)
-log("2a", "Restore contractions", "word__ -> apostrophe form via rule map (don__ -> don't, it__ -> it's, you__e -> you're)",
-    "lost apostrophes break negation ('don__' -> don't -> 'not'); text restored to its true meaning although labels were made on the corrupted text (see step V)",
-    (t3 != t4).sum(), N0, b, a)
-
-# residue = runs containing '_' plus adjacent Latin-1 symbols / combining marks left by broken emoji bytes
-RESIDUE = re.compile(r"[ -¿×÷ïð̀-ͯ⁄€]*_+"
-                     r"[_ -¿×÷ïð̀-ͯ⁄€]*")
-TOKEN = re.compile(r"([#@$][A-Za-z0-9_]+)")
+def is_unreadable(text: str) -> bool:
+    """A tweet whose script was destroyed: >= 2 residues, < 4 readable words and < 50 % Latin letters."""
+    body = re.sub(r"[#@$]\w+", " ", text)
+    letters = [ch for ch in body if ch.isalpha()]
+    latin_share = sum(ch.isascii() for ch in letters) / max(len(letters), 1)
+    words = re.findall(r"\b[A-Za-z]{2,}\b", body)
+    return count_residue(text) >= 2 and len(words) < 4 and latin_share < 0.5
 
 
-def strip_residue(s):
-    parts = TOKEN.split(s)
-    n = 0
+# --------------------------------------------------------------------------------------------------------------
+# Contractions: the source replaced the apostrophe AND the following character with '__'
+# (it’s -> it__, don’t -> don__, you’re -> you__e). Only patterns checked against every occurrence are restored.
+# --------------------------------------------------------------------------------------------------------------
+NEGATION_STEMS = ("don", "doesn", "didn", "isn", "aren", "wasn", "weren", "hasn", "haven", "hadn",
+                  "couldn", "shouldn", "wouldn", "won", "can", "ain", "mustn", "needn")
+S_STEMS = ("it", "that", "what", "there", "let", "he", "she", "who", "how", "here", "where")
+LL_STEMS = ("i", "you", "we", "they", "he", "she", "it", "that", "there")
+PARTICIPLES = {"been", "got", "gotten", "lost", "seen", "done", "had", "made", "broken", "taken", "given",
+               "known", "become", "gone", "bought", "held", "paid", "felt", "heard", "left", "told",
+               "thought", "kept", "begun", "fallen", "grown", "shown", "written", "chosen", "missed"}
+SKIPPABLE_ADVERBS = {"already", "just", "never", "ever", "finally", "all", "really", "also", "probably", "definitely"}
+_END = r"(?=[^A-Za-z0-9_]|$)"
+
+
+def _join(stem: str, suffix: str) -> str:
+    """Keep the case of shouted words: DON__ -> DON'T, don__ -> don't, I__ -> I'm."""
+    return stem + (suffix.upper() if stem.isupper() and len(stem) > 1 else suffix)
+
+
+CONTRACTION_RULES = [
+    ("n't", re.compile(rf"\b({'|'.join(NEGATION_STEMS)})__{_END}", re.I), lambda m: _join(m.group(1), "'t")),
+    ("I'm", re.compile(rf"\b(i)__{_END}", re.I), lambda m: _join(m.group(1), "'m")),
+    ("'s", re.compile(rf"\b({'|'.join(S_STEMS)})__{_END}", re.I), lambda m: _join(m.group(1), "'s")),
+    ("'ll", re.compile(rf"\b({'|'.join(LL_STEMS)})__l{_END}", re.I), lambda m: _join(m.group(1), "'ll")),
+    ("I've", re.compile(rf"\b(i)__e{_END}", re.I), lambda m: _join(m.group(1), "'ve")),
+    ("y'all", re.compile(rf"\b(y)__ll{_END}", re.I), lambda m: _join(m.group(1), "'all")),
+]
+RE_VE_RULE = re.compile(r"\b(you|we|they)__e\b", re.I)
+
+
+def _re_or_ve(match: re.Match) -> str:
+    """you__e / we__e / they__e -> 've when the next word (after adverbs) is a past participle, else 're."""
+    words = [w.lower() for w in re.findall(r"[A-Za-z]+", match.string[match.end():match.end() + 60])]
+    while words and words[0] in SKIPPABLE_ADVERBS:
+        words.pop(0)
+    nxt = words[0] if words else ""
+    participle = nxt in PARTICIPLES or (len(nxt) > 3 and nxt.endswith("ed"))
+    return _join(match.group(1), "'ve" if participle else "'re")
+
+
+def restore_contractions(text: str) -> tuple[str, Counter]:
+    hits = Counter()
+    for name, pattern, repl in CONTRACTION_RULES:
+        text, n = pattern.subn(repl, text)
+        hits[name] += n
+    text, n = RE_VE_RULE.subn(_re_or_ve, text)
+    hits["'re/'ve"] += n
+    return text, hits
+
+
+def strip_lost_characters(text: str) -> tuple[str, int]:
+    """Remove '_' runs and mojibake residue; return (text, number of removed pieces).
+
+    Hashtag, mention and cashtag tokens keep single inner underscores ('#ES_F'); runs of two or more are lost
+    characters ('#Bitcoin__rs' -> '#Bitcoin rs'), and a token that is only underscores ('#____') is removed.
+    """
+    parts = PROTECTED.split(text)
+    removed = 0
     out = []
-    for i, p in enumerate(parts):
-        if i % 2 == 1:  # protected hashtag / mention / cashtag: keep inner '_' (e.g. #ES_F, @cz_binance)
-            core = p[0] + p[1:].strip("_")
-            n += int(core != p)
-            out.append(core if len(core) > 1 else " ")
-        else:
-            p2, k = RESIDUE.subn(" ", p)
-            n += k
-            out.append(p2)
-    s2 = "".join(out)
-    s2, k2 = re.subn(r"\u00e2(?=[\s\u0080-\u00bf]|$)", " ", s2)  # orphan 'â' = first byte of a broken dash/quote
-    s2 = re.sub(r"\s+", " ", s2).strip()
-    return s2, n + k2
+    for i, part in enumerate(parts):
+        if i % 2 == 1:
+            inner = part[1:]
+            cleaned = re.sub(r"_{2,}", " ", inner).strip("_ ")
+            removed += cleaned != inner
+            out.append(part[0] + cleaned if cleaned else " ")
+            continue
+        part, n_underscore = re.subn(r"_+", " ", part)
+        n_residue = count_residue(part)
+        part = LATIN1_RUN.sub(lambda m: " " if _is_residue(m.group()) else m.group(), part)
+        removed += n_underscore + n_residue
+        out.append(part)
+    return " ".join("".join(out).split()), removed
 
 
-res = t4.map(strip_residue)
-t5 = res.map(lambda x: x[0])
-df["emoji_lost"] = (res.map(lambda x: x[1]) > 0).astype(int)
-b, a = first_change(t4, t5)
-log("2b", "Remove emoji residue", "remove '_' runs and attached broken symbol bytes outside #/@/$ tokens; set emoji_lost=1",
-    "the original emoji are unrecoverable; residue would create junk tokens. Flag kept because lost emoji explain part of label noise",
-    (t4 != t5).sum(), N0, b, a)
-
-# --------------------------------------------------------------------------------------
-# Step 3. Twitter-specific standardisation
-# --------------------------------------------------------------------------------------
-t6 = t5.str.replace(r"^RT\s+", "", regex=True)
-log("3a", "Remove retweet marker", "leading 'RT '", "platform artefact", (t5 != t6).sum(), N0)
-df["n_mentions"] = t6.str.count(r"@\w+")
-df["n_hashtags"] = t6.str.count(r"#\w+")
-df["n_cashtags"] = t6.str.count(r"\$[A-Za-z]{1,6}\b")
-t7 = t6.str.replace(r"@\w+", "@user", regex=True)
-b, a = first_change(t6, t7)
-log("3b", "Anonymise mentions", "@handle -> @user (count kept in n_mentions)",
-    "handles are identifiers with no sentiment; anonymisation also limits personal data",
-    (t6 != t7).sum(), N0, b, a)
-df["hashtags"] = t7.str.findall(r"#(\w+)").map(lambda xs: " ".join(x.lower() for x in xs))
-df["text_hashtag_kept"] = t7  # cleaned text still containing '#', used by the language/content checks
-t8 = t7.str.replace(r"#(\w+)", r"\1", regex=True)
-b, a = first_change(t7, t8)
-log("3c", "Hashtag symbol", "'#bearmarket' -> 'bearmarket'; no word segmentation; hashtag list kept in column hashtags",
-    "labels come from VADER which scored each hashtag as one unknown token; segmenting would add sentiment the labeller never saw",
-    (t7 != t8).sum(), N0, b, a)
-df["text_clean"] = t8
-
-# --------------------------------------------------------------------------------------
-# Step 4. Duplicates
-# --------------------------------------------------------------------------------------
-def drop(mask, reason):
-    m = mask & df["keep"]
-    df.loc[m, "keep"] = False
-    df.loc[m, "drop_reason"] = reason
-    return int(m.sum())
+def normalize_hashtags(text: str) -> str:
+    """'#StockMarketCrash' -> 'StockMarketCrash' (not split: VADER saw one unknown token); stray '#' removed."""
+    text = HASHTAG.sub(lambda m: " " + m.group(1), text)
+    return " ".join(text.replace("#", " ").split())
 
 
-def conflict_groups(key):
-    g = df[df["keep"]].groupby(key)["label"].nunique()
-    return set(g[g > 1].index)
+def content_key(text: str) -> str:
+    """Key for 'same content': lowercase, no @user, letters and digits only."""
+    text = text.lower().replace("@user", " ")
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", text).split())
 
 
-exact = df.duplicated(subset=["text_raw"], keep="first")
-assert not conflict_groups(df["text_raw"]), "exact duplicates with conflicting labels"
-k = drop(exact, "exact_duplicate")
-log("4a", "Remove exact duplicates", "identical raw text (keep first); label conflicts checked: 0",
-    "duplicates inflate counts and leak between train/test", k, df["keep"].sum(),
-    df.loc[exact.idxmax(), "text_raw"] if k else "")
+def body_words(text: str) -> int:
+    """Words of >= 2 letters once hashtags, mentions and cashtags are removed."""
+    body = re.sub(r"[#@$]\w+", " ", text)
+    return sum(len(w) >= 2 for w in re.findall(r"[^\W\d_]+", body))
 
-df["dedup_key"] = (df["text_clean"].str.lower().str.replace("@user", " ", regex=False)
-                   .str.replace(r"[^a-z0-9$ ]", " ", regex=True).str.split().str.join(" "))
-conf = conflict_groups(df["dedup_key"])
-near = df["keep"] & df.duplicated(subset=["dedup_key"], keep="first") & ~df["dedup_key"].isin(conf)
-k = drop(near, "near_duplicate")
-k_conf = drop(df["dedup_key"].isin(conf), "duplicate_label_conflict")
-log("4b", "Remove near duplicates", "same text after lowercasing, removing @user/punctuation/emoji residue (keep first)",
-    "copies that differ only by tagged account or emoji", k, df["keep"].sum(),
-    df.loc[near.idxmax(), "text_raw"] if k else "")
-log("4c", "Resolve duplicate label conflicts", "drop whole group if duplicates disagree on label",
-    "no reliable way to pick the right label; 0 groups found", k_conf, df["keep"].sum())
 
-# --------------------------------------------------------------------------------------
-# Step 5. Content-free tweets
-# --------------------------------------------------------------------------------------
-body = (df["text_hashtag_kept"].str.replace(r"[#@$]\w+", " ", regex=True)
-        .str.replace(r"[^A-Za-zÀ-ɏͰ-￿]+", " ", regex=True))
-df["n_body_words"] = body.str.split().map(lambda ws: sum(len(w) >= 2 for w in ws))
-k = drop(df["n_body_words"] == 0, "no_content_hashtag_or_mention_only")
-log("5", "Remove content-free tweets", "no word of >=2 letters left after removing hashtags, mentions, cashtags, numbers, symbols",
-    "nothing to classify; all such tweets were labelled Neutral by default, which teaches a 'no text = Neutral' shortcut",
-    k, df["keep"].sum())
-
-# --------------------------------------------------------------------------------------
-# Step 6. Language
-# --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------
+# Language
+# --------------------------------------------------------------------------------------------------------------
 HINGLISH = {"hai", "hain", "nahi", "nahin", "kya", "bhai", "toh", "ke", "ka", "ki", "ko", "mein", "ye", "yeh",
             "bhi", "aur", "kar", "karo", "raha", "rha", "rhe", "hota", "tak", "sab", "abhi", "jo", "kuch",
             "paisa", "paise", "yaar", "mera", "meri", "apna", "kaise", "kyu", "kyun", "gaya", "gya", "wala",
             "wale", "se", "hua", "hue", "diya", "liya", "naam", "chiz", "agar", "lekin"}
+# Short or romanised tweets that the rules cannot judge. Each was read in full and is not English
+# (romanised Hindi / Punjabi / Urdu, Spanish, Italian, French, Tagalog).
+MANUAL_NON_ENGLISH = {14, 35, 63, 69, 70, 187, 232, 241, 248, 360, 395, 409, 444, 462, 526, 535, 553, 664, 676, 1155}
+# Languages of the stopword vote (NLTK stopword lists), with the code written to the lang column
+STOPWORD_LANGUAGES = {"french": "fr", "spanish": "es", "italian": "it", "portuguese": "pt", "german": "de",
+                      "dutch": "nl", "romanian": "ro", "indonesian": "id", "swedish": "sv", "norwegian": "no",
+                      "danish": "da"}
 
 
-WF_LANGS = set(available_languages())
+class LanguageTagger:
+    """Language decision per tweet: 'en' and 'short' are kept, any other value is removed.
+
+    Other values: non_latin, hinglish, or the code of the language found by the stopword vote or langdetect.
+    """
+
+    def __init__(self):
+        from nltk.corpus import stopwords, wordnet, words
+
+        self._wordnet = wordnet
+        self.english_stop = set(stopwords.words("english"))
+        self.english = {w.lower() for w in words.words()} | self.english_stop
+        # Words that are stopwords in English too (a, me, no ...) are no evidence for another language
+        self.foreign_stop = {code: set(stopwords.words(name)) - self.english_stop
+                             for name, code in STOPWORD_LANGUAGES.items()}
+
+    def english_share(self, tokens: list[str]) -> float:
+        tokens = [t for t in tokens if len(t) >= 2]
+        if not tokens:
+            return 1.0
+        known = sum(t in self.english or self._wordnet.morphy(t) is not None for t in tokens)
+        return known / len(tokens)
+
+    def stopword_vote(self, tokens: list[str]) -> tuple[str, int, int]:
+        """Short-word language identification: (best other language, its stopword hits, English stopword hits).
+
+        The English word list alone cannot separate French or Spanish from English: it contains le, la, de,
+        en, se ... Function words can, because every language has its own.
+        """
+        words = re.findall(r"[a-zà-ɏ]+", " ".join(tokens))  # split c'est -> c est, as the stopword lists do
+        code = max(self.foreign_stop, key=lambda c: sum(w in self.foreign_stop[c] for w in words))
+        return code, sum(w in self.foreign_stop[code] for w in words), sum(w in self.english_stop for w in words)
+
+    def __call__(self, text: str) -> str:
+        from langdetect import DetectorFactory, LangDetectException, detect_langs
+
+        body = re.sub(r"[#@$]\w+", " ", text)
+        letters = [ch for ch in body if ch.isalpha()]
+        tokens = re.findall(r"[a-zÀ-ɏ']+", body.lower())
+        if not letters:
+            return "short"
+        if sum(not (ch.isascii() or "À" <= ch <= "ɏ") for ch in letters) / len(letters) > 0.3:
+            return "non_latin"
+        hinglish = sum(t in HINGLISH for t in tokens)
+        if tokens and hinglish >= 2 and hinglish / len(tokens) >= 0.15:
+            return "hinglish"
+        if len(letters) < 15:
+            return "short"
+        code, foreign, english = self.stopword_vote(tokens)
+        if foreign >= 3 and foreign > 2 * english:
+            return code
+        DetectorFactory.seed = 0  # langdetect is random unless seeded
+        try:
+            top = detect_langs(body)[0]
+        except (LangDetectException, TypeError) as err:  # TypeError: rare internal langdetect error
+            warnings.warn(f"langdetect failed ({err!r}) on {body[:50]!r}; tagged as 'short'")
+            return "short"
+        # langdetect alone mislabels short English tweets ('Stocks are on sale!' -> sv), so it also needs
+        # most words to be missing from the English word list
+        if top.lang != "en" and top.prob >= 0.80 and self.english_share(tokens) < 0.5:
+            return top.lang
+        return "en"
 
 
-def en_vocab_ratio(words, lang):
-    """share of words that are more frequent in English than in the detected language (wordfreq)"""
-    words = [w for w in words if len(w) >= 2]
-    if not words:
-        return 1.0
-    if lang in WF_LANGS and lang != "en":
-        hits = [zipf_frequency(w, "en") >= zipf_frequency(w, lang) and zipf_frequency(w, "en") > 0 for w in words]
-    else:
-        hits = [zipf_frequency(w, "en") >= 3.5 for w in words]
-    return sum(hits) / len(words)
+# --------------------------------------------------------------------------------------------------------------
+# text_norm: expand contractions -> lowercase -> letters only -> POS-aware lemmatisation -> stopwords
+# --------------------------------------------------------------------------------------------------------------
+NEGATIONS = {"no", "not", "nor", "never", "none", "nothing", "nobody", "neither", "nowhere", "cannot", "without"}
+# Direction and intensity words carry the meaning of market tweets ('market down', 'below 30k', 'too much red')
+KEEP_WORDS = {"up", "down", "over", "under", "off", "out", "above", "below", "more", "most", "less", "least",
+              "very", "too", "against", "few"}
+EXPANSIONS = [(r"\bcan't\b", "can not"), (r"\bwon't\b", "will not"), (r"\bain't\b", "is not"),
+              (r"n't\b", " not"), (r"'re\b", " are"), (r"'m\b", " am"), (r"'ll\b", " will"),
+              (r"'ve\b", " have"), (r"'d\b", " would"), (r"'s\b", "")]
 
 
-def lang_info(s):
-    s = re.sub(r"[#@$]\w+", " ", s)
-    letters = [c for c in s if c.isalpha()]
-    if not letters:
-        return "short", 1.0, 1.0
-    non_latin = sum(not (c.isascii() or "\u00c0" <= c <= "\u024f") for c in letters) / len(letters)
-    words = re.findall(r"[a-z\u00c0-\u024f']+", s.lower())
-    hing = sum(w in HINGLISH for w in words)
-    if non_latin > 0.3:
-        return "non_latin", 1.0, 0.0
-    if len(re.findall(r"\u00e0[\u00a4\u00a5\u00aa\u00ab]", s)) >= 2:  # 'à¤'/'àª' = broken Devanagari/Gujarati bytes
-        return "garbled_indic", 1.0, 0.0
-    if hing >= 2 and hing / max(len(words), 1) >= 0.15:
-        return "hinglish", 1.0, round(en_vocab_ratio(words, "en"), 3)
-    if len(letters) < 20:
-        return "short", 1.0, round(en_vocab_ratio(words, "en"), 3)
-    try:
-        top = detect_langs(s)[0]
-        lang, prob = top.lang, round(top.prob, 3)
-    except Exception:
-        lang, prob = "unk", 0.0
-    return lang, prob, round(en_vocab_ratio(words, lang), 3)
+def _wordnet_pos(tag: str) -> str:
+    return {"J": "a", "V": "v", "R": "r"}.get(tag[:1], "n")
 
 
-li = df["text_hashtag_kept"].map(lang_info)
-df["lang"] = li.map(lambda x: x[0])
-df["lang_prob"] = li.map(lambda x: x[1])
-df["en_vocab_ratio"] = li.map(lambda x: x[2])
-non_en = (df["lang"].isin(["non_latin", "garbled_indic", "hinglish"])
-          | (~df["lang"].isin(["en", "short", "unk", "non_latin", "garbled_indic", "hinglish"])
-             & (df["lang_prob"] >= 0.80) & (df["en_vocab_ratio"] < 0.50)))
-df["is_english"] = (~non_en).astype(int)
-dist = df.loc[df["keep"] & non_en, "label_name"].value_counts().to_dict()
-k = drop(non_en, "non_english")
-log("6a", "Remove non-English tweets (rules)",
-    "non-Latin script >30% of letters, OR >=2 broken Devanagari/Gujarati byte pairs, OR >=2 Hinglish markers (>=15% of words), OR langdetect non-en with p>=0.80 and <50% of words more frequent in English than in that language (wordfreq)",
-    f"labeller (VADER) is English-only, so these labels are artefacts (removed label mix: {dist}); rows kept in all_flagged file for ablation",
-    k, df["keep"].sum())
+class NormBuilder:
+    def __init__(self):
+        from nltk import pos_tag
+        from nltk.corpus import stopwords
+        from nltk.stem import WordNetLemmatizer
 
-# Manual review: every kept row not detected as 'en' (short texts, low-confidence detections) and every
-# 'en' row containing Hindi function words was read by a team member. These raw_ids are clearly
-# non-English (romanised Hindi/Punjabi, Spanish, Italian, French, Tagalog) but too short for the rules.
-# Code-mixed tweets whose sentiment-bearing part is English (e.g. raw_id 1091) are kept.
-MANUAL_NON_EN = {14, 35, 63, 69, 70, 187, 232, 241, 248, 360, 409, 444, 462, 526, 535, 553, 664, 676, 1155}
-man = df["raw_id"].isin(MANUAL_NON_EN)
-df.loc[man, "lang"] = "manual_non_en"
-df.loc[man, "is_english"] = 0
-k = drop(man, "non_english_manual_review")
-log("6b", "Remove non-English tweets (manual review)", f"raw_id in MANUAL_NON_EN ({len(MANUAL_NON_EN)} ids, listed in clean_v2.py)",
-    "language detection is unreliable on short / romanised text; borderline rows checked by hand", k, df["keep"].sum())
+        self._pos_tag = pos_tag
+        self._lemmatizer = WordNetLemmatizer()
+        self.stopwords = set(stopwords.words("english")) - NEGATIONS - KEEP_WORDS
 
-# --------------------------------------------------------------------------------------
-# Step 7. Outlier flags (kept, not removed)
-# --------------------------------------------------------------------------------------
-tok = df["text_hashtag_kept"].str.split().str.len()
-df["hashtag_ratio"] = (df["n_hashtags"] / tok).round(3)
-df["is_hashtag_spam"] = (df["hashtag_ratio"] >= 0.6).astype(int)
-log("7", "Flag hashtag-spam outliers", "hashtag_ratio = hashtags / tokens >= 0.6 -> is_hashtag_spam=1 (not removed)",
-    "extreme but genuine tweets; flag lets models/analysis treat them separately",
-    (df["keep"] & (df["is_hashtag_spam"] == 1)).sum(), df["keep"].sum())
-
-# --------------------------------------------------------------------------------------
-# Step 8. Normalised text for TF-IDF / Word2Vec: lowercase, punctuation & number removal,
-#         tokenisation + lemmatisation (spaCy), stopwords removed EXCEPT negations
-# --------------------------------------------------------------------------------------
-nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
-NEG = {"not", "no", "nor", "never", "none", "nothing", "nobody", "neither", "nowhere", "without",
-       "cannot", "against", "down", "up", "off", "over", "very", "too", "less", "more", "most"}
-STOP = (nlp.Defaults.stop_words | {"user", "amp", "rt"}) - NEG
+    def __call__(self, text_clean: str) -> str:
+        text = text_clean.replace("’", "'").lower().replace("@user", " ")
+        for pattern, repl in EXPANSIONS:
+            text = re.sub(pattern, repl, text)
+        tokens = re.findall(r"[a-z]+", text)
+        if not tokens:
+            return ""
+        lemmas = [self._lemmatizer.lemmatize(tok, _wordnet_pos(tag)) for tok, tag in self._pos_tag(tokens)]
+        return " ".join(w for w in lemmas if len(w) > 1 and w not in self.stopwords)
 
 
-def normalise(s):
-    s = s.replace("@user", " ")
-    s = re.sub(r"\$([A-Za-z]{1,6})\b", r" \1 ", s)  # cashtag $TSLA -> tsla
-    out = []
-    for tk in nlp(s.lower()):
-        lem = tk.lemma_.lower().strip()
-        if tk.text in {"n't", "nt"} or lem == "not":
-            out.append("not")
-            continue
-        if tk.is_punct or tk.is_space or tk.like_num or not re.search(r"[a-z]", lem) or re.match(r"\d", lem):
-            continue  # drop numbers/prices ('30k', '16160'); keep alnum hashtags ('nifty50', 'bearmarket2022')
-        if tk.text.endswith("ies") and lem.endswith("ie"):
-            lem = lem[:-2] + "y"  # spaCy: 'cryptocurrencies' -> 'cryptocurrencie'; fix to 'cryptocurrency'
-        lem = re.sub(r"[^a-z0-9']", "", lem).strip("'")
-        if len(lem) < 2 or lem in STOP:
-            continue
-        out.append(lem)
-    return " ".join(out)
+# --------------------------------------------------------------------------------------------------------------
+# Groups for leakage-safe splitting
+# --------------------------------------------------------------------------------------------------------------
+class UnionFind:
+    def __init__(self, items):
+        self.parent = {i: i for i in items}
+
+    def find(self, i):
+        while self.parent[i] != i:
+            self.parent[i] = self.parent[self.parent[i]]
+            i = self.parent[i]
+        return i
+
+    def union(self, a, b):
+        ra, rb = self.find(a), self.find(b)
+        if ra != rb:
+            self.parent[max(ra, rb)] = min(ra, rb)
 
 
-kept = df["keep"]
-df["text_norm"] = ""
-df.loc[kept, "text_norm"] = df.loc[kept, "text_clean"].map(normalise)
-ex = df.loc[kept & (df["text_clean"].str.contains("n't")), ["text_clean", "text_norm"]].iloc[0]
-log("8a", "Create text_norm", "lowercase; spaCy en_core_web_sm tokenise + lemmatise; drop punctuation, numeric tokens (prices, dates), stopwords; KEEP negations/intensifiers",
-    "brief requires normalisation + lemmatisation; negation words kept because they flip sentiment",
-    kept.sum(), kept.sum(), ex["text_clean"], ex["text_norm"])
-k = drop(df["text_norm"].str.strip() == "", "empty_after_normalisation")
-log("8b", "Remove empty normalised text", "text_norm empty", "no features for TF-IDF", k, df["keep"].sum())
+def jaccard_pairs(ids, keys, threshold=0.7, min_tokens=5):
+    """Pairs of ids whose content-key token sets have Jaccard similarity >= threshold."""
+    sets = [(i, set(k.split())) for i, k in zip(ids, keys)]
+    sets = [(i, s) for i, s in sets if len(s) >= min_tokens]
+    for a in range(len(sets)):
+        id_a, set_a = sets[a]
+        for b in range(a + 1, len(sets)):
+            id_b, set_b = sets[b]
+            inter = len(set_a & set_b)
+            if inter and inter / len(set_a | set_b) >= threshold:
+                yield id_a, id_b
 
-# --------------------------------------------------------------------------------------
-# Step 9. Engineered features (on text_clean) and stratified split
-# --------------------------------------------------------------------------------------
-tc = df["text_clean"]
-df["char_len"] = tc.str.len()
-df["word_len"] = tc.str.split().str.len()
-df["n_exclaim"] = tc.str.count("!")
-df["n_question"] = tc.str.count(r"\?")
-letters = tc.str.count(r"[A-Za-z]")
-df["caps_ratio"] = (tc.str.count(r"[A-Z]") / letters.replace(0, np.nan)).fillna(0).round(3)
-CRYPTO = r"btc|bitcoin|eth|ethereum|crypto|nft|doge|altcoin|defi|blockchain|solana|luna|terra|binance|bnb|xrp|cardano|web3|shib|usdt|coin|tezos|hodl"
-INDIA = r"nifty|sensex|nse|bse|india|sgx|zerodha|dalal"
-USSTK = r"sp500|spx|spy|nasdaq|dow|tsla|aapl|amzn|nvda|wallstreet|nyse|fed\b|qqq|es_f|nq_f"
-for name, pat in [("domain_crypto", CRYPTO), ("domain_india", INDIA), ("domain_us", USSTK)]:
-    df[name] = df["hashtags"].str.contains(pat, regex=True).astype(int)
-log("9a", "Engineer features", "char_len, word_len, n_exclaim, n_question, caps_ratio, n_hashtags, n_mentions, n_cashtags, emoji_lost, domain_* from hashtags",
-    "signals removed by normalisation (!, caps) kept as numeric features; domains support business insight. VADER deliberately NOT added (label leakage)",
-    df["keep"].sum(), df["keep"].sum())
 
-df["split"] = ""
-idx = df.index[df["keep"]]
-tr, tmp = train_test_split(idx, test_size=0.30, stratify=df.loc[idx, "label"], random_state=SEED)
-va, te = train_test_split(tmp, test_size=0.50, stratify=df.loc[tmp, "label"], random_state=SEED)
-df.loc[tr, "split"], df.loc[va, "split"], df.loc[te, "split"] = "train", "val", "test"
-log("9b", "Stratified split", f"train/val/test = 70/15/15 stratified by label, random_state={SEED}, after deduplication",
-    "dedup before split prevents leakage; fit TF-IDF/vocab on train only",
-    df["keep"].sum(), df["keep"].sum())
+# --------------------------------------------------------------------------------------------------------------
+# Features (VADER is deliberately not one of them: it would leak the label)
+# --------------------------------------------------------------------------------------------------------------
+DOMAINS = {
+    "domain_crypto": r"btc|bitcoin|eth|ethereum|crypto|nft|doge|altcoin|defi|blockchain|solana|luna|terra|binance"
+                     r"|bnb|xrp|cardano|web3|shib|usdt|coin|tezos|hodl",
+    "domain_india": r"nifty|sensex|nse|bse|india|sgx|zerodha|dalal",
+    "domain_us": r"sp500|spx|spy|nasdaq|dow|tsla|aapl|amzn|nvda|wallstreet|nyse|fed\b|qqq|es_f|nq_f",
+}
 
-final = df[df["keep"]]
-try:  # validation only - VADER is NOT used as a model feature (it would leak the label)
+
+def add_features(df: pd.DataFrame) -> None:
+    clean = df["text_clean"]
+    letters = clean.str.count(r"[A-Za-z]")
+    tokens = df["text_fixed"].str.split().str.len().clip(lower=1)
+    df["char_len"] = clean.str.len()
+    df["word_len"] = clean.str.split().str.len()
+    df["n_hashtags"] = df["text_fixed"].str.count(r"#\w+")
+    df["n_mentions"] = df["text_fixed"].str.count(r"@\w+")
+    df["n_cashtags"] = df["text_fixed"].str.count(CASHTAG.pattern)
+    df["n_exclaim"] = clean.str.count("!")
+    df["n_question"] = clean.str.count(r"\?")
+    df["caps_ratio"] = (clean.str.count(r"[A-Z]") / letters.replace(0, np.nan)).fillna(0).round(3)
+    df["hashtag_ratio"] = (df["n_hashtags"] / tokens).round(3)
+    df["is_hashtag_spam"] = (df["hashtag_ratio"] >= 0.6).astype(int)
+    tags = df["hashtags"] + " " + df["text_fixed"].str.findall(CASHTAG.pattern).str.join(" ").str.lower()
+    for name, pattern in DOMAINS.items():
+        df[name] = tags.str.contains(pattern, regex=True).astype(int)
+
+
+# --------------------------------------------------------------------------------------------------------------
+# Pipeline
+# --------------------------------------------------------------------------------------------------------------
+def setup_nltk() -> None:
+    import nltk
+
+    NLTK_DIR.mkdir(parents=True, exist_ok=True)
+    if str(NLTK_DIR) not in nltk.data.path:
+        nltk.data.path.insert(0, str(NLTK_DIR))
+    for package in NLTK_PACKAGES:
+        nltk.download(package, download_dir=str(NLTK_DIR), quiet=True)
+
+
+def _short(text, n=60) -> str:
+    text = str(text).replace("\n", " ⏎ ")
+    return text if len(text) <= n else text[:n] + "…"
+
+
+def _first_change(before: pd.Series, after: pd.Series) -> str:
+    changed = before != after
+    if not changed.any():
+        return ""
+    i = changed[changed].index[0]
+    a, b = str(before[i]), str(after[i])
+    start = next((k for k in range(min(len(a), len(b))) if a[k] != b[k]), min(len(a), len(b)))
+    start = max(0, start - 20)
+    prefix = "…" if start else ""
+    return f"{prefix}{_short(a[start:], 50)} → {prefix}{_short(b[start:], 50)}"
+
+
+def build(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dict]:
+    """Clean the raw table (columns text, text_sentiment). Returns (all rows with keep/drop_reason, log, evidence)."""
+    setup_nltk()
+    log, evidence = [], {}
+    df = pd.DataFrame({"id": np.arange(len(raw)), "text_raw": raw["text"].astype(str),
+                       "label": raw["text_sentiment"].astype(int)})
+    df["label_name"] = df["label"].map(LABEL_NAMES)
+    df["keep"], df["drop_reason"] = True, ""
+
+    def kept() -> int:
+        return int(df["keep"].sum())
+
+    def record(step, operation, rule, rationale, affected=0, example="", details=""):
+        log.append({"step": step, "operation": operation, "rule": rule, "rationale": rationale,
+                    "rows_affected": int(affected), "rows_remaining": kept(), "example": example, "details": details})
+
+    def drop(mask: pd.Series, reason: str) -> pd.DataFrame:
+        hit = mask & df["keep"]
+        df.loc[hit, "keep"] = False
+        df.loc[hit, "drop_reason"] = reason
+        return df[hit]
+
+    def drop_example(removed: pd.DataFrame) -> str:
+        return _short(removed["text_raw"].iloc[0]) if len(removed) else ""
+
+    def changed(before: pd.Series, after: pd.Series) -> tuple[int, str]:
+        """Rows still kept whose text changed, and an example of the first change."""
+        live = df["keep"]
+        return int(((before != after) & live).sum()), _first_change(before[live], after[live])
+
+    assert df["label"].isin(LABEL_NAMES).all(), "unknown label in raw data"
+    record("0", "Load raw data", "read the course CSV; id = row number in the raw file; label_name from the dataset description",
+           "stable ids let every later file (splits, embeddings, predictions) align on the same tweet", len(df))
+    empty = df["text_raw"].str.strip() == ""
+    record("1", "Check missing and empty values", "isna() on both columns; whitespace-only text",
+           "required by the brief; none found, so nothing is imputed or removed", int(empty.sum()))
+
+    removed = drop(df.duplicated("text_raw", keep="first"), "exact_duplicate")
+    record("2", "Remove exact duplicates", "identical raw text; first copy kept (labels of all copies agree)",
+           "duplicates inflate counts and leak between train and test", len(removed), drop_example(removed))
+
+    df["text_fixed"] = df["text_raw"].map(fix_encoding)
+    record("3", "Repair encoding and HTML entities", "ftfy.fix_text, then html.unescape",
+           "double-encoded UTF-8 ('estÃ©s') and '&amp;' are scraping artefacts, not user text",
+           *changed(df["text_raw"], df["text_fixed"]))
+
+    removed = drop(df["text_fixed"].map(is_unreadable), "unreadable_encoding")
+    record("4", "Remove unreadable tweets", ">= 2 mojibake residues, < 4 readable words and < 50 % Latin letters",
+           "non-Latin scripts whose bytes were lost in the source file; no model can read them",
+           len(removed), drop_example(removed))
+
+    text = df["text_fixed"].map(lambda s: MENTION.sub("@user", s))
+    record("5", "Anonymise mentions", "@handle -> @user (count kept in n_mentions)",
+           "handles carry no sentiment, often contain underscores, and are personal data",
+           *changed(df["text_fixed"], text))
+
+    restored = text.map(restore_contractions)
+    after = restored.map(lambda r: r[0])
+    hits = sum((r[1] for r in restored), Counter())
+    record("6", "Restore verified contractions", "it__ -> it's, don__ -> don't, you__e -> you're / you've (by the next word)",
+           "the source replaced the apostrophe and the next character with '__'; restored text keeps negations",
+           *changed(text, after), ", ".join(f"{k}: {v}" for k, v in hits.most_common()))
+    evidence["contractions"] = dict(hits)
+    text = after
+
+    stripped = text.map(strip_lost_characters)
+    after = stripped.map(lambda r: r[0])
+    df["emoji_lost"] = (stripped.map(lambda r: r[1]) > 0).astype(int)
+    lost = df["emoji_lost"].astype(bool) & df["keep"]
+    record("7", "Remove lost characters", "delete '_' runs and mojibake residue outside #/@/$ tokens; flag emoji_lost = 1; "
+           "merge newlines and repeated spaces",
+           "the original emoji and symbols cannot be recovered; a placeholder would be read as text by transformers",
+           int(lost.sum()), _first_change(text[lost], after[lost]))
+    text = after
+    df["text_hashtagged"] = text
+
+    tagger = LanguageTagger()
+    df["lang"] = df["text_hashtagged"].map(tagger)
+    non_en = ~df["lang"].isin(["en", "short"])
+    mix = df.loc[non_en & df["keep"], "label_name"].value_counts().to_dict()
+    removed = drop(non_en, "non_english")
+    record("8a", "Remove non-English tweets (rules)",
+           "non-Latin script > 30 % of letters; OR >= 2 Hinglish function words (>= 15 % of words); OR >= 3 "
+           "stopwords of one other language and more than twice the English stopwords; OR langdetect non-English "
+           "with p >= 0.80 and < 50 % of words found in an English word list",
+           "VADER only reads English, so these labels are artefacts", len(removed), drop_example(removed), f"label mix: {mix}")
+    manual = df["id"].isin(MANUAL_NON_ENGLISH)
+    df.loc[manual & df["keep"], "lang"] = "manual_non_en"
+    mix = df.loc[manual & df["keep"], "label_name"].value_counts().to_dict()
+    removed = drop(manual, "non_english_manual")
+    record("8b", "Remove non-English tweets (manual list)", f"{len(MANUAL_NON_ENGLISH)} ids listed in clean_v2.py, each read in full",
+           "language detection is unreliable on short or romanised text", len(removed), drop_example(removed), f"label mix: {mix}")
+    evidence["non_english_mix"] = df.loc[df["drop_reason"].str.startswith("non_english"), "label_name"].value_counts().to_dict()
+
+    no_words = df["text_hashtagged"].map(body_words) == 0
+    mix = df.loc[no_words & df["keep"], "label_name"].value_counts().to_dict()
+    removed = drop(no_words, "no_content")
+    record("9", "Remove tweets without words", "no word of >= 2 letters once hashtags, mentions and cashtags are removed",
+           "nothing to classify; these tweets are Neutral by default, which would teach a 'no text = Neutral' shortcut",
+           len(removed), drop_example(removed), f"label mix: {mix}")
+    evidence["no_content_mix"] = mix
+
+    df["hashtags"] = df["text_hashtagged"].str.findall(HASHTAG).map(lambda tags: " ".join(t.lower() for t in tags))
+    df["text_clean"] = df["text_hashtagged"].map(normalize_hashtags)
+    record("10", "Normalise hashtags", "'#StockMarketCrash' -> 'StockMarketCrash' (no word splitting); stray '#' removed; list kept in hashtags",
+           "VADER scored each hashtag as one unknown token; splitting would add sentiment the labeller never saw",
+           *changed(df["text_hashtagged"], df["text_clean"]))
+
+    key = df["text_clean"].map(content_key)
+    live = df["keep"]
+    conflict_keys = set(df[live].groupby(key[live])["label"].nunique().loc[lambda s: s > 1].index)
+    removed_conflict = drop(key.isin(conflict_keys), "duplicate_label_conflict")
+    live = df["keep"]
+    removed = drop(live & key.where(live).duplicated(keep="first") & key.notna(), "content_duplicate")
+    record("11", "Remove content duplicates", "same text after lowercasing and removing @user, punctuation and lost characters; first copy kept",
+           "copies that differ only by tagged account, emoji or punctuation", len(removed) + len(removed_conflict),
+           drop_example(removed), f"{len(removed_conflict)} rows in groups with conflicting labels")
+
+    builder = NormBuilder()
+    df["text_norm"] = df["text_clean"].map(builder)
+    i = df.index[df["keep"] & df["text_clean"].str.contains("n't")][0]
+    record("12", "Build text_norm", "expand contractions; lowercase; letters only; POS-aware WordNet lemmatisation; "
+           "NLTK stopwords removed except negations and direction / intensity words",
+           "bag-of-words input for TF-IDF and FastText; negations and up/down/below flip the meaning of market tweets",
+           kept(), f"{_short(df.at[i, 'text_clean'], 50)} → {_short(df.at[i, 'text_norm'], 50)}")
+    removed = drop(df["text_norm"].str.strip() == "", "empty_text_norm")
+    record("13", "Remove empty text_norm", "nothing left after normalisation", "no input for bag-of-words models",
+           len(removed), drop_example(removed))
+
+    # Groups: duplicates join their first copy; near-duplicates (Jaccard) and identical text_norm join each other.
+    uf = UnionFind(df["id"])
+    for key_series in (df["text_raw"], key):
+        first = {}
+        for rid, k in zip(df["id"], key_series):
+            if not k:  # an empty key would chain unrelated tweets together
+                continue
+            if k in first:
+                uf.union(first[k], rid)
+            else:
+                first[k] = rid
+    readable = df["drop_reason"] != "unreadable_encoding"
+    for a, b in jaccard_pairs(df.loc[readable, "id"], key[readable]):
+        uf.union(a, b)
+    by_norm = {}
+    for rid, norm in zip(df.loc[readable, "id"], df.loc[readable, "text_norm"]):
+        if norm.strip():
+            by_norm.setdefault(norm, []).append(rid)
+    for members in by_norm.values():
+        for rid in members[1:]:
+            uf.union(members[0], rid)
+    df["group_id"] = df["id"].map(uf.find)
+    sizes = df.loc[df["keep"], "group_id"].value_counts()
+    grouped = df["keep"] & df["group_id"].map(sizes).gt(1)
+    record("14", "Group related tweets", "union of: token Jaccard >= 0.7 (>= 5 tokens), identical text_norm, and "
+           "duplicates with their first copy; group_id = smallest raw id in the group",
+           "02_splits keeps a group inside one fold, so templates such as 'Candle of day … closed' never straddle train and test",
+           int(grouped.sum()), "", f"{df.loc[grouped, 'group_id'].nunique()} groups among retained tweets")
+    evidence["groups"] = (int(grouped.sum()), int(df.loc[grouped, "group_id"].nunique()))
+
+    add_features(df)
+    record("15", "Engineer features", "lengths, hashtag / mention / cashtag counts, ! and ?, caps_ratio, hashtag_ratio, "
+           "is_hashtag_spam (>= 0.6), domain_crypto / india / us from hashtags and cashtags",
+           "signals that normalisation removes, for XGBoost and EDA; VADER is not a feature (label leakage)", kept())
+
+    evidence["vader"] = _vader_evidence(df)
+    evidence["keep_words"] = {w: int(df.loc[df["keep"], "text_norm"].str.contains(rf"\b{w}\b").sum())
+                              for w in ("not", "no", "never", "up", "down", "below", "more")}
+    record("F", "Final dataset", "English, readable, non-duplicate tweets that contain words",
+           "label distribution: " + str(df.loc[df["keep"], "label_name"].value_counts().to_dict()))
+    return df, log, evidence
+
+
+def _vader_evidence(df: pd.DataFrame) -> dict:
+    """Agreement between VADER (+/-0.05) and the given labels for different versions of the retained text.
+
+    Analysis only: shows which text the labeller saw and why hashtags are not split.
+    """
     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-    _v = SentimentIntensityAnalyzer()
-    _lab = lambda x: (lambda c: 1 if c >= 0.05 else (2 if c <= -0.05 else 0))(_v.polarity_scores(x)["compound"])
-    agr_raw = (final["text_raw"].map(_lab) == final["label"]).mean()
-    agr_cln = (final["text_clean"].map(_lab) == final["label"]).mean()
-    agr_seg = (final["text_clean"].str.replace(r"(?i)stockmarketcrash", "stock market crash", regex=True)
-               .map(_lab) == final["label"]).mean()
-    log("V", "Validation: label provenance check",
-        "VADER (thresholds +/-0.05) on retained rows: raw text vs text_clean vs hashtags segmented",
-        f"agreement raw={agr_raw:.2%}, clean={agr_cln:.2%}, segmented={agr_seg:.2%}. Labels are VADER-generated on the ALREADY-CORRUPTED text "
-        "(restoring don't/isn't lowers agreement: e.g. 'don't panic' is labelled Negative). Clean text kept; mismatches treated as label noise. "
-        "Segmenting hashtags would drop agreement sharply, confirming step 3c.",
-        int((final["text_raw"].map(_lab) != final["label"]).sum()), len(final))
-except ImportError:
-    pass
-log("F", "Final retained dataset",
-    "English, non-duplicate, contains real words, non-empty text_norm",
-    "label distribution: " + str(final["label_name"].value_counts().to_dict()),
-    len(final), len(final))
 
-# --------------------------------------------------------------------------------------
-# Save
-# --------------------------------------------------------------------------------------
-cols = ["raw_id", "split", "label", "label_name", "text_raw", "text_clean", "text_norm", "hashtags",
-        "char_len", "word_len", "n_hashtags", "n_mentions", "n_cashtags", "n_exclaim", "n_question",
-        "caps_ratio", "hashtag_ratio", "is_hashtag_spam", "emoji_lost",
-        "domain_crypto", "domain_india", "domain_us", "lang", "lang_prob", "en_vocab_ratio"]
-final[cols].to_csv(OUT / "clean_v2.csv", index=False)
-df[["keep", "drop_reason"] + [c for c in cols if c != "split"] + ["split", "is_english"]].to_csv(
-    OUT / "clean_v2_all_flagged.csv", index=False)
-pd.DataFrame(LOG).to_csv(OUT / "cleaning_log_v2.csv", index=False, encoding="utf-8-sig")
-print(pd.DataFrame(LOG)[["step", "operation", "rows_affected", "rows_remaining"]].to_string(index=False))
-print(final["label_name"].value_counts())
-print(final["split"].value_counts())
+    sia = SentimentIntensityAnalyzer()
+
+    def hits(texts: pd.Series) -> pd.Series:
+        scores = texts.map(lambda s: sia.polarity_scores(s)["compound"])
+        pred = np.where(scores >= 0.05, 1, np.where(scores <= -0.05, 2, 0))
+        return pd.Series(pred == df.loc[texts.index, "label"].to_numpy(), index=texts.index)
+
+    kept = df[df["keep"]]
+    camel = kept["text_clean"].map(lambda s: re.sub(r"(?<=[a-z])(?=[A-Z])", " ", s))
+    split_crash = kept["text_clean"].str.replace(r"(?i)stockmarketcrash", "stock market crash", regex=True)
+    raw_hit, clean_hit = hits(kept["text_raw"]), hits(kept["text_clean"])
+    gap = raw_hit & ~clean_hit
+    polar_foreign = df[df["drop_reason"].str.startswith("non_english") & (df["label"] != 0)]
+    return {"agreement": {"raw text": round(float(raw_hit.mean()), 3),
+                          "text_clean (hashtags kept whole)": round(float(clean_hit.mean()), 3),
+                          "hashtags split on CamelCase (clean_v1 style)": round(float(hits(camel).mean()), 3),
+                          "'stockmarketcrash' split into words": round(float(hits(split_crash).mean()), 3)},
+            "gap_rows": int(gap.sum()),
+            "gap_with_contraction": int((gap & kept["text_raw"].str.contains(r"[A-Za-z]__")).sum()),
+            "non_english_polar": (len(polar_foreign), int(hits(polar_foreign["text_raw"]).sum()))}
+
+
+# --------------------------------------------------------------------------------------------------------------
+# Outputs
+# --------------------------------------------------------------------------------------------------------------
+DICTIONARY = [
+    ("id", "int", "Row number in data/raw/stock_market_crash_2022.csv; never renumbered", "all files align on it"),
+    ("group_id", "int", "Related tweets (duplicates, near-duplicates, identical text_norm) share one id", "4: 02_splits"),
+    ("label", "int", "Given label: 0 Neutral, 1 Positive, 2 Negative", "all models"),
+    ("label_name", "str", "Label as text", "EDA, charts"),
+    ("text_raw", "str", "Original tweet, unchanged", "EDA, error analysis"),
+    ("text_clean", "str", "Encoding repaired, @user, contractions restored, lost characters removed, '#' removed "
+     "(hashtags not split); case and punctuation kept", "1: Sentence-BERT; 5: token sequences"),
+    ("text_norm", "str", "text_clean lowercased, letters only, lemmatised, stopwords removed except negations "
+     "and direction words", "1: TF-IDF baseline; 2: FastText"),
+    ("hashtags", "str", "Hashtags of the tweet, lowercase, space-separated", "3: EDA, features"),
+    ("lang", "str", "en, or short (too short to detect); other values only appear in clean_v2_all.csv", "EDA"),
+    ("emoji_lost", "int", "1 if the source file destroyed characters in this tweet (usually emoji)", "3: features, error analysis"),
+    ("char_len / word_len", "int", "Length of text_clean in characters / words", "3: EDA, XGBoost"),
+    ("n_hashtags / n_mentions / n_cashtags", "int", "Counts in the repaired text before anonymisation", "3: XGBoost"),
+    ("n_exclaim / n_question", "int", "Number of ! and ? in text_clean", "3: XGBoost"),
+    ("caps_ratio", "float", "Upper-case share of the letters in text_clean", "3: XGBoost"),
+    ("hashtag_ratio / is_hashtag_spam", "float / int", "Hashtags per token; flag when >= 0.6", "3: XGBoost, EDA"),
+    ("domain_crypto / domain_india / domain_us", "int", "Market mentioned in hashtags or cashtags", "3: business insight"),
+]
+
+
+def _md_table(rows: list[list], header: list[str]) -> list[str]:
+    def cell(v) -> str:
+        return str(v).replace("|", r"\|").replace("\n", " ")
+
+    return ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)] + \
+           ["| " + " | ".join(cell(v) for v in row) + " |" for row in rows]
+
+
+def render_log(df: pd.DataFrame, log: list[dict], evidence: dict) -> str:
+    kept = df[df["keep"]]
+    before = df["label_name"].value_counts()
+    after = kept["label_name"].value_counts()
+    reasons = df.loc[~df["keep"], "drop_reason"].value_counts()
+    lines = [f"# {VERSION} cleaning log", "",
+             "Produced by `data/clean_v2/clean_v2.py` from `data/raw/stock_market_crash_2022.csv`. "
+             "Re-running the script reproduces these numbers exactly.", "",
+             "## Summary", "",
+             f"- Raw tweets: {len(df):,}; retained: **{len(kept):,}**; removed: {int((~df['keep']).sum())}.",
+             "- Removed rows stay in `clean_v2_all.csv` with `keep = 0` and a `drop_reason`, so every removal can be "
+             "audited or reversed in an ablation experiment.", ""]
+    lines += _md_table([[name, int(before.get(name, 0)), int(after.get(name, 0)), f"{after.get(name, 0) / len(kept):.1%}"]
+                        for name in ("Positive", "Neutral", "Negative")],
+                       ["Label", "Raw", "Retained", "Retained share"])
+    lines += ["", f"Largest / smallest class after cleaning: {after.max() / after.min():.2f}.", "",
+              "## Steps", ""]
+    lines += _md_table([[r["step"], r["operation"], r["rule"], r["rationale"], r["rows_affected"], r["rows_remaining"],
+                         r["example"], r["details"]] for r in log],
+                       ["Step", "Operation", "Rule", "Rationale", "Rows affected", "Rows remaining", "Example", "Details"])
+    lines += ["", "## Removed rows", ""]
+    lines += _md_table([[reason, int(n), "; ".join(_short(t, 45) for t in df.loc[df["drop_reason"] == reason, "text_raw"].head(2))]
+                        for reason, n in reasons.items()], ["Reason", "Rows", "Examples"])
+    lines += ["", "## Columns of clean_v2.csv", ""]
+    lines += _md_table([list(r) for r in DICTIONARY], ["Column", "Type", "Meaning", "Used by (member)"])
+    lines += ["", "`clean_v2_all.csv` has the same columns plus `keep` (1/0) and `drop_reason`, for all 1,698 raw tweets.", "",
+              "## Evidence behind the design decisions", "",
+              "**Hashtags are not split.** Agreement between VADER and the given labels on the retained tweets:", ""]
+    vader = evidence["vader"]
+    lines += _md_table([[k, f"{v:.1%}"] for k, v in vader["agreement"].items()], ["Text given to VADER", "Agreement"])
+    lines += ["", "Splitting hashtags adds words such as *crash* that the labeller never saw, so agreement drops. "
+              f"The small gap between raw text and text_clean comes mostly from restored contractions: of the "
+              f"{vader['gap_rows']} tweets where VADER matches the label on the raw text but not on text_clean, "
+              f"{vader['gap_with_contraction']} contain a restored contraction. The labeller saw 'shouldn__ worry' "
+              "(no negation, so Negative); the cleaned text says 'shouldn't worry'. These tweets are label noise "
+              "caused by the corrupted source text, not cleaning errors.", "",
+              f"**Non-English tweets are removed.** Label mix of the removed non-English tweets: {evidence['non_english_mix']}. "
+              "VADER scores text it cannot read as 0, which becomes Neutral. Of the "
+              f"{vader['non_english_polar'][0]} removed non-English tweets labelled Positive or Negative, "
+              f"{vader['non_english_polar'][1]} get the same label from VADER on the raw text: their sentiment comes "
+              "from words VADER reads as English, such as Spanish *sin* ('without'), German *die* ('the'), Italian "
+              "*dire* ('to say') and Romanian *care* ('which').", "",
+              f"**Tweets without words are removed.** Label mix: {evidence['no_content_mix']}.", "",
+              "**Negations and direction words are kept in text_norm.** Retained tweets whose text_norm contains: "
+              + ", ".join(f"*{w}* {n}" for w, n in evidence["keep_words"].items()) + ". "
+              "Standard NLTK stopword lists would delete all of them.", "",
+              f"**Template tweets are grouped.** {evidence['groups'][0]} retained tweets fall into {evidence['groups'][1]} groups "
+              "(near-duplicates or identical text_norm, e.g. 'Candle of day … closed'); a group must stay inside one fold.", "",
+              "VADER is used only for this analysis and must never be a model feature.", "",
+              "## Changes from clean_v1", "",
+              "- Columns renamed: `text_light` → `text_clean`, `text_full` → `text_norm`; added `label_name`, `hashtags`, "
+              "`emoji_lost` and 13 feature columns; dropped `n_restored` and `n_unk`.",
+              "- Hashtags are no longer split on CamelCase.",
+              "- Lost characters are removed and flagged instead of being replaced by `[UNK]`.",
+              "- Non-English tweets and tweets without words are removed (they stay in `clean_v2_all.csv`).",
+              "- Direction and intensity words (up, down, below, more …) survive stopword removal.",
+              "- `group_id` also joins tweets with identical `text_norm`, which fixes template tweets crossing train and test.",
+              "- The unreadable-tweet rule also requires < 50 % Latin letters, so 'Rug pull 100% Ahead' is kept.", "",
+              "## Reproduce", "", "```bash", "conda activate dsai4205", "python data/clean_v2/clean_v2.py", "```", ""]
+    return "\n".join(lines)
+
+
+def main() -> None:
+    raw = pd.read_csv(RAW_CSV, encoding="utf-8")
+    df, log, evidence = build(raw)
+    full = df.assign(keep=df["keep"].astype(int))[["keep", "drop_reason"] + COLUMNS]
+    full.to_csv(HERE / f"{VERSION}_all.csv", index=False, encoding="utf-8", lineterminator="\n")
+    full.loc[full["keep"] == 1, COLUMNS].to_csv(HERE / f"{VERSION}.csv", index=False, encoding="utf-8", lineterminator="\n")
+    (HERE / f"{VERSION}_log.md").write_text(render_log(df, log, evidence), encoding="utf-8", newline="\n")
+    summary = pd.DataFrame(log)[["step", "operation", "rows_affected", "rows_remaining"]]
+    print(summary.to_string(index=False))
+    print(f"\nretained {int(df['keep'].sum())} of {len(df)} tweets -> {HERE}")
+
+
+if __name__ == "__main__":
+    main()

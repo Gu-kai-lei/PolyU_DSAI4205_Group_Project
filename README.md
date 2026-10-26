@@ -53,15 +53,14 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 
 ## 数据集要点
 
-- 共 1,698 条推文，两列：`text` 和 `text_sentiment`，其中 **0 = Neutral，1 = Positive，2 = Negative**
-- 类别分布：Positive 627 / Neutral 575 / Negative 496，轻度不平衡
-- 下面这些来自建仓库之前的初步分析，**还没有在仓库里复现**。由 3 号（`00_eda`）和 2 号（`31_label_noise_errors`）在 notebook 里重新计算，并记录方法和数据版本：
-  - TF-IDF + LR 初步测试：5 折交叉验证准确率约 62%
-  - 标签和 VADER 打分的一致率约 93.2%，标签可能由 VADER 自动生成（待验证的假设）
-  - 部分字符被替换成了 `__`（疑似弯引号和 emoji，具体来源待抽样核对），还有一部分双重编码造成的乱码
-  - 混有西班牙语、印地语、阿拉伯语等多种语言
-  - 9 条完全重复，规范化文本后还有约 71 条近似重复
-  - Neutral 类的文本明显比其他两类短
+- 原始数据 1,698 条推文，两列：`text` 和 `text_sentiment`，其中 **0 = Neutral，1 = Positive，2 = Negative**；类别分布 Positive 627 / Neutral 575 / Negative 496
+- 当前清洗版本 **clean_v2 保留 1,525 条**：Positive 607（39.8%）/ Neutral 433（28.4%）/ Negative 485（31.8%），最大类与最小类之比 1.40。每一步删了什么、为什么，见 [clean_v2_log.md](data/clean_v2/clean_v2_log.md)
+- 已在仓库里核实的数据问题（`01_cleaning`、`31_label_noise_errors`）：
+  - 标签很可能是 VADER 自动生成的：VADER 在原文上和标签的一致率约 93%，换成另一个情感词典 TextBlob 只有约 60%
+  - 原文件把弯引号 `’` 连同后一个字符替换成了 `__`（`it’s` → `it__`），emoji 也被破坏；部分推文有双重编码乱码
+  - 有完全重复、内容重复和模板推文（如 "Candle of day … closed"）；后者用 `group_id` 分组，划分时不能拆开
+  - 混有西班牙语、印地语拼音等非英文推文，标签大多是 Neutral（VADER 读不懂外语），clean_v2 已删除
+- 还待确认：TF-IDF + LR 的准确率（初步测试约 62%，由 1 号在 `03_baseline` 复现）；Neutral 推文是否更短（3 号 EDA）
 
 ## 分工
 
@@ -93,7 +92,7 @@ PolyU_DSAI4205_Group_Project/
 ├─ results/                每个模型的评分结果，每次实验一行，带 run_id
 ├─ figures/                报告和 PPT 用图
 ├─ reports/         [6 号] 已提交的报告和 PPT 存档
-└─ data/                   原始数据、clean_v1 和清洗日志；嵌入与预测缓存不进 Git
+└─ data/                   原始数据和各版本清洗结果（当前 clean_v2）；嵌入与预测缓存不进 Git
 ```
 
 ## 快速开始
@@ -101,8 +100,8 @@ PolyU_DSAI4205_Group_Project/
 **1. 克隆仓库**
 
 ```bash
-git clone https://github.com/Gu-kai-lei/DSAI4205_Group_Project.git
-cd DSAI4205_Group_Project
+git clone https://github.com/Gu-kai-lei/PolyU_DSAI4205_Group_Project.git
+cd PolyU_DSAI4205_Group_Project
 ```
 
 **2. 创建环境**
@@ -123,7 +122,9 @@ pip install torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/cu12
 
 **3. 准备数据**
 
-原始数据已放在 `data/raw/stock_market_crash_2022.csv`，当前清洗数据与日志放在 `data/clean_v1/`。下载仓库后，默认直接读取这些文件。嵌入缓存和预测结果仍保留在本地或共享 Google Drive。
+原始数据已放在 `data/raw/stock_market_crash_2022.csv`，当前清洗版本放在 `data/clean_v2/`（数据、全量表、日志和生成脚本）。下载仓库后，`load_clean()` 默认直接读取这些文件。
+
+清洗数据的主要列：`id`（对齐所有文件的编号）、`group_id`（划分时同组不能拆开）、`label` / `label_name`、`text_clean`（给 SBERT 和 token 序列）、`text_norm`（给 TF-IDF 和 FastText），以及给 XGBoost 和 EDA 用的特征列。完整的列说明见 [clean_v2_log.md](data/clean_v2/clean_v2_log.md)。嵌入缓存和预测结果仍保留在本地或共享 Google Drive。
 
 如果要使用共享网盘，在网盘中保持相同目录结构，并设置 `DATA_ROOT`（PowerShell）：
 
@@ -148,7 +149,7 @@ jupyter lab
 - 每个人在自己的分支上开发（例如 `m3-xgboost`），通过 Pull Request 合入 `main`。
 - 只改自己负责的 notebook。要改 `src/` 里的公共代码，先在群里说一声。
 - 每次实验先用 `new_run_id()` 生成一个 run_id。评分用 `evaluate(..., run_id=run_id, params=...)` 计算、`save_result(row, "m3_xgboost")` 保存；OOF 概率和测试集概率用 `save_preds(run_id, ...)` 保存。同一个 run_id 把成绩、超参数和预测文件绑在一起，重跑也不会覆盖旧结果。
-- 仓库仅保留指定的原始 CSV、`clean_v1.csv` 和版本清洗日志；嵌入缓存、预测结果、模型权重及其他本地数据不提交。
+- 仓库只保留原始 CSV 和各版本清洗结果（`data/clean_vN/`）；嵌入缓存、预测结果、模型权重及其他本地数据不提交。
 - 每次实验记进 `docs/experiments/mN.md`，每周会议记进 `docs/meetings/`。这些是评分里"迭代过程证据"的来源。
 
 **数据和实验版本**
@@ -163,6 +164,8 @@ jupyter lab
 
 `load_splits(clean=...)` 会自动检查划分和清洗数据是否对得上，对不上会直接报错。
 
+新增清洗版本 N 时：新建 `data/clean_vN/` 放数据、全量表、日志和生成脚本，在 `.gitignore` 里放行这个文件夹，再把 `src/config.py` 的 `CLEAN_VERSION` 改成 N。
+
 **不能做的事**
 
 - 把 VADER 分数当特征：标签可能就是 VADER 生成的（待验证），用它当特征等于走捷径，相当于泄露标签。
@@ -175,7 +178,7 @@ jupyter lab
 **我们的实施方案**
 
 - Transformer 类模型（SBERT 等）只用来抽取嵌入、保持冻结，不和分类器一起微调。项目要求嵌入模型和分类模型相互独立，冻结能让这一点没有争议。是否允许微调，答疑时向老师确认。
-- 文本里的 `__` 只还原人工抽样核对过的模式，其余统一替换成占位符，每条规则都记进清洗日志。
+- 文本里的 `__` 只还原人工核对过的模式，其余直接删除并用 `emoji_lost` 标记（不用占位符，免得 Transformer 把占位符当成文字），每条规则都记进清洗日志。
 
 ## 原始资料
 

@@ -1,6 +1,6 @@
 """全局路径、常量和版本号。所有 notebook 都从这里导入，不要在代码里写死路径。
 
-- 原始数据和 clean_v1 数据随仓库保存；嵌入和预测缓存放在本地或共享网盘
+- 原始数据和各版本清洗数据（data/clean_vN/）随仓库保存；嵌入和预测缓存放在本地或共享网盘
 - splits / results / figures 是小文件，跟着仓库一起做版本管理
 """
 import os
@@ -9,7 +9,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]  # 仓库根目录
 
 # 版本号：升级规则见 README 的"数据和实验版本"一节
-CLEAN_VERSION = 1  # 当前使用的清洗数据 -> DATA_ROOT/clean_v1/clean_v1.csv
+CLEAN_VERSION = 2  # 当前使用的清洗数据 -> DATA_ROOT/clean_v2/clean_v2.csv
 SPLIT_VERSION = 1  # 当前使用的数据划分 -> splits/folds_v1.csv
 
 

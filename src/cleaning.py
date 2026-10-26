@@ -1,6 +1,8 @@
-"""数据清洗函数。notebooks/01_data/01_cleaning.ipynb 按顺序调用这些函数，并把每一步写进清洗日志。
+"""clean_v1 的清洗流程（已冻结，只为复现 data/clean_v1/clean_v1.csv 而保留）。
 
-生成两套文本：
+当前版本 clean_v2 的清洗脚本是 data/clean_v2/clean_v2.py，列名和规则都有变化，新代码不要再调用这里的函数。
+
+clean_v1 生成两套文本：
 - text_light：只修复编码和格式问题，保留大小写、标点和占位符 [UNK]，给 Transformer（SBERT 等）用
 - text_full：在 text_light 基础上展开缩写、小写、去标点和数字、词形还原、去停用词（保留否定词），
   给 TF-IDF baseline 和 FastText 用
@@ -33,6 +35,7 @@ import pandas as pd
 from .config import PROJECT_ROOT
 
 UNK = "[UNK]"  # 无法还原的字符（emoji、符号或所有格 's）的占位符；text_full 里会变成 unk
+V1_COLUMNS = ["id", "group_id", "text_raw", "text_full", "text_light", "label"]  # clean_v1 的列，和当前接口不同
 NLTK_DIR = PROJECT_ROOT / "data" / "nltk_data"  # NLTK 语料下载到仓库内（data/ 不进 Git）
 NLTK_PACKAGES = ("stopwords", "wordnet", "omw-1.4", "averaged_perceptron_tagger_eng")
 
@@ -294,12 +297,10 @@ def run_cleaning(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], pd.DataFr
     """完整清洗流程。raw 是 src.data.load_raw() 的输出（id、text、label 三列）。
 
     返回：
-    - clean：符合 src.data.CLEAN_COLUMNS 的清洗数据，另附 lang、n_restored、n_unk 三列
+    - clean：clean_v1 格式的清洗数据（V1_COLUMNS），另附 lang、n_restored、n_unk 三列
     - log：每一步一条记录（step、operation、rationale、rows_affected、rows_remaining、example、details）
     - dropped：被删除的行（id、text_raw、label、reason）
     """
-    from .data import CLEAN_COLUMNS, check_clean
-
     log, dropped = [], []
     df = raw[["id", "text", "label"]].rename(columns={"text": "text_raw"}).copy()
 
@@ -416,8 +417,7 @@ def run_cleaning(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], pd.DataFr
            "Token Jaccard ≥ 0.7 (tweets with ≥ 5 tokens) on the content key; a group must stay in one fold",
            in_groups, "", f"{df.loc[sizes > 1, 'group_id'].nunique()} groups")
 
-    clean = df[CLEAN_COLUMNS + ["lang", "n_restored", "n_unk"]].reset_index(drop=True)
-    check_clean(clean)
+    clean = df[V1_COLUMNS + ["lang", "n_restored", "n_unk"]].reset_index(drop=True)
     record("Final dataset", "Columns: " + ", ".join(clean.columns))
     dropped_rows = pd.concat(dropped, ignore_index=True) if dropped else pd.DataFrame()
     return clean, log, dropped_rows
