@@ -1,6 +1,6 @@
-# Interim report draft: data cleaning (member 2)
+# Report draft: label origin, cleaning and text representation (member 2)
 
-Draft text for the interim report, following the section numbers of the report template. All numbers come from `data/clean_v2/clean_v2.py` (shown in `notebooks/01_data/01_cleaning.ipynb`) and `notebooks/04_analysis/31_label_noise_errors.ipynb` on data version `clean_v2`; the full step-by-step log is in `data/clean_v2/clean_v2_log.md` (copied to `docs/cleaning_log.md` for the appendix). Figures are in `figures/`.
+Draft text for the interim and final reports (sections 2.1, 3.1 and 3.3), following the section numbers of the report template. All numbers come from `data/clean_v2/clean_v2.py` (shown in `notebooks/01_data/01_cleaning.ipynb`) and `notebooks/04_analysis/31_label_noise_errors.ipynb` on data version `clean_v2`; the full step-by-step log is in `data/clean_v2/clean_v2_log.md` (copied to `docs/cleaning_log.md` for the appendix). Figures are in `figures/`.
 
 ---
 
@@ -63,3 +63,22 @@ Two versions of each tweet are produced, because the models need different input
 - **`text_norm`** is fully normalised for the TF-IDF baseline and the self-trained FastText: contractions are expanded (*don't* → *do not*), text is lowercased, only letters are kept (punctuation and digits removed), words are lemmatised with WordNet using part-of-speech tags (*selling* → *sell*), and NLTK English stopwords are removed **except negations and direction words**. Standard stopword lists would delete *not* (in 307 retained tweets), *down* (102), *up* (84), *more* (81) and *below* (23), turning "not bullish" into "bullish" and "down 20%" into nothing. A `text_norm` tweet has 14.3 tokens on average (median 13, maximum 39).
 
 Characters destroyed in the source file are not replaced by a placeholder token, because transformers would read the placeholder as text. Instead, the `emoji_lost` flag (397 retained tweets) keeps that information for the feature-based models and the error analysis.
+
+### Self-trained word embedding: FastText
+
+FastText (Bojanowski et al., 2017) learns a vector for every word and for its character n-grams, so it can still build a vector for a rare or misspelled word from its parts. It is our embedding trained from scratch: we train it with gensim on `text_norm` (skip-gram, 100 dimensions, context window 5, character n-grams of 3–5 letters, words that appear at least twice, 50 epochs, fixed seed 42).
+
+Although FastText never sees the labels, it must follow the same split as the classifiers. If the validation tweets of fold *k* were part of its training text, every model that uses it would get a slightly optimistic cross-validation score. We therefore train six FastText models:
+
+- for each fold *k*, one model trained only on the other four folds (975–980 tweets, vocabulary of 1,386–1,420 words), which encodes all training tweets for that fold;
+- one `full` model trained on all 1,222 training tweets (vocabulary of 1,645 words), which encodes the training and test tweets for the final test predictions.
+
+Test tweets are never used to train any FastText model. Each model gives three representations of a tweet:
+
+- **mean vector**: the average of its word vectors (100 numbers);
+- **SIF vector** (Arora et al., 2017): a weighted average in which frequent words get less weight, weight *a* / (*a* + *p*(*w*)) with *a* = 0.001, followed by removing the first principal component shared by all tweets. Word frequencies and the principal component are computed on the training part only;
+- **token sequence**: the word vectors in order, padded or cut to 31 tokens (the 99th percentile of tweet length; 8 tweets are cut), with a mask marking the padding. These are the FastText inputs of TextCNN and BiLSTM.
+
+We do not weight word vectors with TF-IDF, because the project brief allows TF-IDF only in the baseline.
+
+The nearest neighbours in the `full` model show what such a small corpus can learn. Some neighbours are meaningful (*bull*: *bullrun*, *bullish*, *bullmarket*; *recession*: *depression*), but many only share spelling (*dip*: *sip*, *sit*, *rip*; *bear*: *bearish*, *beat*, *swear*). With about 1,000 training tweets, the character n-grams dominate, which limits how well these vectors separate the sentiment classes (Section 4.1).

@@ -227,8 +227,8 @@ class LanguageTagger:
     def stopword_vote(self, tokens: list[str]) -> tuple[str, int, int]:
         """Short-word language identification: (best other language, its stopword hits, English stopword hits).
 
-        The English word list alone cannot separate French or Spanish from English: it contains le, la, de,
-        en, se ... Function words can, because every language has its own.
+        The English word lists alone cannot separate French or Spanish from English: NLTK words and WordNet
+        accept la, de, en, se ... Function words can, because every language has its own.
         """
         words = re.findall(r"[a-zà-ɏ]+", " ".join(tokens))  # split c'est -> c est, as the stopword lists do
         code = max(self.foreign_stop, key=lambda c: sum(w in self.foreign_stop[c] for w in words))
