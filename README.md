@@ -22,7 +22,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 | 日期 | 交付物 | 占比 |
 |---|---|---|
 | **11/6（周五）23:55** | 中期报告：EDA、清洗、baseline 结果 | 20% |
-| 第 10周周六 14:00–18:00 | consultation | 含在上一项 |
+| 11.7 | consultation | 含在上一项 |
 | **11/22（周日）23:55** | 展示用 PPT（12 分钟pre） | 20% |
 | **11/22（周日）23:55** | 最终报告 .docx + **单个** .ipynb | 60% |
 
@@ -69,7 +69,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 | # | 成员 | 模型 | 公共任务 | 报告章节 | PPT |
 |---|---|---|---|---|---|
 | 1 | FENG Dingran | SVM | Baseline、Stacking 集成、模型总对比和选最终模型 | 3.4、4.1、4.2、5.1 | 结果对比（2 分钟） |
-| 2 | GU Kailei | kNN | 清洗和 FastText（已完成）、错误分析、项目协调、中期报告汇总提交 | 1.3、3.1、3.3（清洗和 FastText）、4.3、5.5、附录 C | 清洗和标签来源（2 分钟） |
+| 2 | GU Kailei | kNN | 清洗和 FastText、错误分析、项目协调、中期报告汇总提交 | 1.3、3.1、3.3（清洗和 FastText）、4.3、5.5、附录 C | 清洗和标签来源（2 分钟） |
 | 3 | Brain & Yang Qitian | XGBoost | EDA（至少 6 张图）、SHAP、商业洞察 | 第 2 章、5.3 | EDA 1 分钟 + 商业洞察 1 分钟 |
 | 4 | CAO Taihe | MLP | 数据划分、PyTorch 训练模板、合并最终 notebook | 3.2、3.5、5.4、附录 A | 公平比较和 MLP（2 分钟） |
 | 5 | YU Guanlin | TextCNN | SBERT 句向量和 token 序列、PPT 模板和统一格式、组织排练 | 3.3（SBERT 和 token 序列） | 文本向量和 TextCNN（2 分钟） |
