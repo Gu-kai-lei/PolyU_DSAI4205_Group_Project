@@ -17,6 +17,7 @@ data/clean_v2/*
 emb/
 preds/
 models/
+member*/outputs/
 *.npy
 *.npz
 *.pt

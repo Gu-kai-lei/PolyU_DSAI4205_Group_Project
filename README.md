@@ -301,6 +301,7 @@ PolyU_DSAI4205_Group_Project/
 ├─ docs/                   课程资料、会议和实验记录、清洗日志、报告草稿
 ├─ notebooks/              按 5 个阶段编号的 notebook，每人只改自己负责的
 ├─ src/                    全组共用函数：路径和版本号、读取数据、评分、缓存、清洗、FastText
+├─ member1/         [1 号] baseline 的实现和测试，由 03_baseline 调用
 ├─ splits/          [4 号] 固定数据划分 folds_v1.csv，生成后不再修改
 ├─ results/                每个模型的评分结果，每次实验一行，带 run_id
 ├─ figures/                报告和 PPT 用图
@@ -361,6 +362,8 @@ jupyter lab
 
 - 每个人在自己的分支上开发（例如 `m3-xgboost`），通过 Pull Request 合入 `main`。
 - 只改自己负责的 notebook。要改 `src/` 里的公共代码，先在群里说一声。
+- 只给自己用的辅助代码放在 `memberN/`（例如 `member1/`），运行输出放 `memberN/outputs/`，不进 Git。
+- 不要在 GitHub 网页上直接上传文件到 `main`，也不要上传整个文件夹的副本；文件放到仓库里对应的位置，再走 Pull Request。
 - 每次实验先用 `new_run_id()` 生成一个 run_id。评分用 `evaluate(..., run_id=run_id, params=...)` 计算、`save_result(row, "m3_xgboost")` 保存；OOF 概率和测试集概率用 `save_preds(run_id, ...)` 保存。同一个 run_id 把成绩、超参数和预测文件绑在一起，重跑也不会覆盖旧结果。
 - 仓库只保留原始 CSV 和各版本清洗结果（`data/clean_vN/`）；嵌入缓存、预测结果、模型权重及其他本地数据不提交。
 - 每次实验记进 `docs/experiments/mN.md`，每周会议记进 `docs/meetings/`。这些是评分里"迭代过程证据"的来源。
