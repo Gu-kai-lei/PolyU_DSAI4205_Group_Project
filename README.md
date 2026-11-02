@@ -60,7 +60,8 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
   - 原文件把弯引号 `’` 连同后一个字符替换成了 `__`（`it’s` → `it__`），emoji 也被破坏；部分推文有双重编码乱码
   - 有完全重复、内容重复和模板推文（如 "Candle of day … closed"）；后者用 `group_id` 分组，划分时不能拆开
   - 混有西班牙语、印地语拼音等非英文推文，标签大多是 Neutral（VADER 读不懂外语），clean_v2 已删除
-- 还待确认：TF-IDF + LR 的准确率（初步测试约 62%，由 1 号在 `03_baseline` 复现）；Neutral 推文是否更短（3 号 EDA）
+- Baseline（TF-IDF + 逻辑回归，正式划分 `folds_v1` 上 5 折交叉验证）：Macro-F1 0.582、准确率 0.593，见 `results/baseline.csv`
+- EDA（`00_eda`）：Neutral 推文明显更短（中位数 13 词，其余两类 25–26 词）；hashtag 占比越高越可能是 Neutral
 
 ## 分工
 
