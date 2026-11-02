@@ -4,15 +4,17 @@ The interim report (20% of the project, due **6 Nov 23:55**) documents the work 
 
 Section numbers follow the final report template, so the same text can be reused in the final report.
 
+**Status (2 Nov):** the assembled report is `reports/DSAI4205_DataVinci_Interim_Report.docx`. Members 3 and 4 should review the EDA and data-split sections, which member 2 completed for them.
+
 | Part | Owner | Content | Source | Status (27 Oct) |
 |---|---|---|---|---|
-| 1 Dataset and task | 2 | Decision problem in two sentences; Table 1 overview and Table 2 data dictionary | `m2_dataset.md` | Draft ready |
-| 2 EDA | 3 | Data quality table (Table 3), six figures each answering one question, class imbalance | `00_eda` | Not started |
-| 2.1 Label origin | 2 | VADER reproduces 93.0% of the labels; consequences for the project | `m2_cleaning.md` | Draft ready |
-| 3.1 Data cleaning | 2 | Table 4 of cleaning steps, before/after examples, class balance after cleaning | `m2_cleaning.md` | Draft ready |
-| 3.2 Data split | 4 | Grouped and stratified split, Table 5, how leakage is prevented | `02_splits` (numbers ready) | To write after review |
-| 3.4 Baseline | 1 | TF-IDF + logistic regression settings; Accuracy, Precision, Recall, F1, confusion matrix, top words | `m1_baseline.md`, `03_baseline` | Method ready, official run pending |
-| Next steps and questions | 2 | Plan to 22 Nov and the questions below | this file | Draft below |
+| 1 Dataset and task | 2 | Decision problem in two sentences; Table 1 overview and Table 2 data dictionary | `m2_dataset.md` | In the report |
+| 2 EDA | 3 | Data quality table (Table 3), six figures each answering one question, class imbalance | `00_eda` | In the report (done by member 2; member 3 to review) |
+| 2.1 Label origin | 2 | VADER reproduces 93.0% of the labels; consequences for the project | `m2_cleaning.md` | In the report |
+| 3.1 Data cleaning | 2 | Table 4 of cleaning steps, before/after examples, class balance after cleaning | `m2_cleaning.md` | In the report |
+| 3.2 Data split | 4 | Grouped and stratified split, Table 5, how leakage is prevented | `02_splits` | In the report (written by member 2; member 4 to review) |
+| 3.4 Baseline | 1 | TF-IDF + logistic regression settings; Accuracy, Precision, Recall, F1, confusion matrix, top words | `m1_baseline.md`, `03_baseline` | Official run done (macro-F1 0.582); in the report |
+| Next steps and questions | 2 | Plan to 22 Nov and the questions below | this file | In the report |
 
 ## Next steps (draft)
 
