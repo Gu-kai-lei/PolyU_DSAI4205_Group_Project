@@ -22,7 +22,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 | 日期 | 交付物 | 占比 |
 |---|---|---|
 | **11/6（周五）23:55** | 中期报告：EDA、清洗、baseline 结果 | 20% |
-| 第 10周周六 14:00–18:00 | consultation | 含在上一项 |
+| **11/7（周六）14:25–15:00** | 答疑（consultation），已预约 | 含在上一项 |
 | **11/22（周日）23:55** | 展示用 PPT（12 分钟pre） | 20% |
 | **11/22（周日）23:55** | 最终报告 .docx + **单个** .ipynb | 60% |
 
@@ -69,7 +69,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 | # | 成员 | 模型 | 公共任务 | 报告章节 | PPT |
 |---|---|---|---|---|---|
 | 1 | FENG Dingran | SVM | Baseline、Stacking 集成、模型总对比和选最终模型 | 3.4、4.1、4.2、5.1 | 结果对比（2 分钟） |
-| 2 | GU Kailei | kNN | 清洗和 FastText（已完成）、错误分析、项目协调、中期报告汇总提交 | 1.3、3.1、3.3（清洗和 FastText）、4.3、5.5、附录 C | 清洗和标签来源（2 分钟） |
+| 2 | GU Kailei | kNN | 清洗和 FastText、错误分析、项目协调、中期报告汇总提交 | 1.3、3.1、3.3（清洗和 FastText）、4.3、5.5、附录 C | 清洗和标签来源（2 分钟） |
 | 3 | Brain & Yang Qitian | XGBoost | EDA（至少 6 张图）、SHAP、商业洞察 | 第 2 章、5.3 | EDA 1 分钟 + 商业洞察 1 分钟 |
 | 4 | CAO Taihe | MLP | 数据划分、PyTorch 训练模板、合并最终 notebook | 3.2、3.5、5.4、附录 A | 公平比较和 MLP（2 分钟） |
 | 5 | YU Guanlin | TextCNN | SBERT 句向量和 token 序列、PPT 模板和统一格式、组织排练 | 3.3（SBERT 和 token 序列） | 文本向量和 TextCNN（2 分钟） |
@@ -108,7 +108,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 - **10/28**：组会，确认分工
 - **划分出来后 1 天内**：kNN 正式结果
 - **11/6**：11/4 前收齐 1、3、4 号的中期报告部分，统一格式后提交**中期报告**
-- **11/7**：预约并主持答疑，记录老师的答复
+- **11/7 14:25–15:00**：主持答疑（已预约），记录老师的答复
 - **每周**：组会记录写进 `docs/meetings/`，检查进度，谁卡住就帮谁
 - **11/17**：错误分析：找出所有模型都判错的推文，看是不是 bear、short、dip 这类金融说法被读错；结果交给 3 号和 6 号
 - 等谁：4 号划分（10/29）、全员预测概率（11/15）
@@ -179,7 +179,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 | 11/1 | 1 号 baseline 结果，3 号 EDA 6 张图 |
 | 11/4 | 1、3、4 号把中期报告各自部分交给 2 号 |
 | **11/6** | **2 号提交中期报告** |
-| 11/7（周六） | 答疑会面 |
+| 11/7（周六）14:25–15:00 | 答疑会面（已预约） |
 | 11/8 | 5 号交 SBERT 句向量和 token 序列，4 号交训练模板，6 号建好报告文档 |
 | 11/10 | 5 号发 PPT 模板 |
 | 11/13 | 6 个模型第一版；6 号给出不平衡处理结论 |
@@ -302,6 +302,7 @@ PolyU_DSAI4205_Group_Project/
 ├─ notebooks/              按 5 个阶段编号的 notebook，每人只改自己负责的
 ├─ src/                    全组共用函数：路径和版本号、读取数据、评分、缓存、清洗、FastText
 ├─ member1/         [1 号] baseline 的实现和测试，由 03_baseline 调用
+├─ MemberN_file/           各成员的交付文件夹（Member1_file 到 Member6_file），由 2 号整理到对应位置
 ├─ splits/          [4 号] 固定数据划分 folds_v1.csv，生成后不再修改
 ├─ results/                每个模型的评分结果，每次实验一行，带 run_id
 ├─ figures/                报告和 PPT 用图
@@ -363,7 +364,7 @@ jupyter lab
 - 每个人在自己的分支上开发（例如 `m3-xgboost`），通过 Pull Request 合入 `main`。
 - 只改自己负责的 notebook。要改 `src/` 里的公共代码，先在群里说一声。
 - 只给自己用的辅助代码放在 `memberN/`（例如 `member1/`），运行输出放 `memberN/outputs/`，不进 Git。
-- 不要在 GitHub 网页上直接上传文件到 `main`，也不要上传整个文件夹的副本；文件放到仓库里对应的位置，再走 Pull Request。
+- 交付文件先上传到自己的 `MemberN_file/` 文件夹（GitHub 网页上 Add file → Upload files），不用管放在哪里、也不用改格式；2 号统一整理到仓库的对应位置。不要改别人的文件夹。
 - 每次实验先用 `new_run_id()` 生成一个 run_id。评分用 `evaluate(..., run_id=run_id, params=...)` 计算、`save_result(row, "m3_xgboost")` 保存；OOF 概率和测试集概率用 `save_preds(run_id, ...)` 保存。同一个 run_id 把成绩、超参数和预测文件绑在一起，重跑也不会覆盖旧结果。
 - 仓库只保留原始 CSV 和各版本清洗结果（`data/clean_vN/`）；嵌入缓存、预测结果、模型权重及其他本地数据不提交。
 - 每次实验记进 `docs/experiments/mN.md`，每周会议记进 `docs/meetings/`。这些是评分里"迭代过程证据"的来源。
