@@ -10,7 +10,7 @@ We use Dataset 3 of the course, "Huge crash in the Stock market". According to i
 
 The file contains no timestamps and no user information, so the collection period cannot be checked directly. The content is consistent with 2022: 56 tweets use hashtags that contain "2022" (for example #BearMarket2022), 92 mention Russia or Ukraine, and 26 mention the LUNA/Terra cryptocurrency, which collapsed in May 2022.
 
-The description does not explain how the labels were assigned. Section 2.1 shows that they were very probably produced automatically by the VADER sentiment tool, which matters for how we interpret every result in this report. Most tweets are in English; 123 tweets (7.2%) are in other languages or could not be read because their characters were damaged in the file. These are removed during cleaning (Section 3.1), which leaves 1,525 tweets.
+The description does not explain how the labels were assigned. Section 2.1 shows that they agree closely with the VADER sentiment tool (93.0%); the original labelling process is unknown, which matters for how we interpret every result in this report. Most tweets are in English; 123 tweets (7.2%) are in other languages or could not be read because their characters were damaged in the file. The current experiments set these aside (Section 3.1), which leaves 1,525 tweets; all rows stay in `clean_v2_all.csv`.
 
 **Table 1 Dataset overview**
 

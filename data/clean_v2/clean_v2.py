@@ -15,10 +15,12 @@ packages from environment.yml (pandas, ftfy, langdetect, nltk, vaderSentiment) a
 running it twice produces byte-identical files.
 
 Design decisions (numbers are recomputed and written to clean_v2_log.md on every run):
-  * The labels are very likely VADER compound scores on the raw text. Hashtags are therefore NOT split into
-    words ('#StockMarketCrash' stays one token) because VADER never saw the split words.
-  * Non-English tweets and tweets without any words are removed: VADER cannot read them, so their labels are
-    almost always Neutral by default. They stay in clean_v2_all.csv for ablation experiments.
+  * The labels agree closely with VADER compound scores on the raw text (93%), but the original labelling
+    process is unknown. Hashtags are NOT split into words ('#StockMarketCrash' stays one token), because
+    splitting adds words that VADER would not score in the raw text.
+  * The current experiments are limited to tweets with English text: non-English tweets and tweets without any
+    words are set aside. Their given labels are mostly Neutral and cannot be checked with an English lexicon;
+    all of them stay in clean_v2_all.csv, so a later comparison run can measure the effect of leaving them out.
   * Characters the source file destroyed (emoji, curly quotes) are removed and flagged in emoji_lost instead
     of being replaced by a placeholder token.
   * Negations and direction words (not, up, down, below ...) survive stopword removal in text_norm.
@@ -479,7 +481,7 @@ def build(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dict]:
            "non-Latin script > 30 % of letters; OR >= 2 Hinglish function words (>= 15 % of words); OR >= 3 "
            "stopwords of one other language and more than twice the English stopwords; OR langdetect non-English "
            "with p >= 0.80 and < 50 % of words found in an English word list",
-           "VADER only reads English, so these labels are artefacts", len(removed), drop_example(removed), f"label mix: {mix}")
+           "experiments are limited to English text; an English lexicon cannot check these labels (mostly Neutral); rows stay in clean_v2_all.csv for a comparison run", len(removed), drop_example(removed), f"label mix: {mix}")
     manual = df["id"].isin(MANUAL_NON_ENGLISH)
     df.loc[manual & df["keep"], "lang"] = "manual_non_en"
     mix = df.loc[manual & df["keep"], "label_name"].value_counts().to_dict()
@@ -492,14 +494,14 @@ def build(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dict]:
     mix = df.loc[no_words & df["keep"], "label_name"].value_counts().to_dict()
     removed = drop(no_words, "no_content")
     record("9", "Remove tweets without words", "no word of >= 2 letters once hashtags, mentions and cashtags are removed",
-           "nothing to classify; these tweets are Neutral by default, which would teach a 'no text = Neutral' shortcut",
+           "no English text to classify; all are labelled Neutral, so keeping them could teach a 'no text = Neutral' shortcut; rows stay in clean_v2_all.csv",
            len(removed), drop_example(removed), f"label mix: {mix}")
     evidence["no_content_mix"] = mix
 
     df["hashtags"] = df["text_hashtagged"].str.findall(HASHTAG).map(lambda tags: " ".join(t.lower() for t in tags))
     df["text_clean"] = df["text_hashtagged"].map(normalize_hashtags)
     record("10", "Normalise hashtags", "'#StockMarketCrash' -> 'StockMarketCrash' (no word splitting); stray '#' removed; list kept in hashtags",
-           "VADER scored each hashtag as one unknown token; splitting would add sentiment the labeller never saw",
+           "VADER treats each hashtag as one unknown token; splitting adds words (e.g. 'crash') that VADER would not score in the raw text",
            *changed(df["text_hashtagged"], df["text_clean"]))
 
     key = df["text_clean"].map(content_key)
@@ -569,7 +571,7 @@ def build(raw: pd.DataFrame) -> tuple[pd.DataFrame, list[dict], dict]:
 def _vader_evidence(df: pd.DataFrame) -> dict:
     """Agreement between VADER (+/-0.05) and the given labels for different versions of the retained text.
 
-    Analysis only: shows which text the labeller saw and why hashtags are not split.
+    Analysis only: compares versions of the text by their agreement with the labels and shows why hashtags are not split.
     """
     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
@@ -658,19 +660,23 @@ def render_log(df: pd.DataFrame, log: list[dict], evidence: dict) -> str:
               "**Hashtags are not split.** Agreement between VADER and the given labels on the retained tweets:", ""]
     vader = evidence["vader"]
     lines += _md_table([[k, f"{v:.1%}"] for k, v in vader["agreement"].items()], ["Text given to VADER", "Agreement"])
-    lines += ["", "Splitting hashtags adds words such as *crash* that the labeller never saw, so agreement drops. "
+    lines += ["", "Splitting hashtags adds words such as *crash* that VADER would not score in the raw text, so agreement drops. "
               f"The small gap between raw text and text_clean comes mostly from restored contractions: of the "
               f"{vader['gap_rows']} tweets where VADER matches the label on the raw text but not on text_clean, "
-              f"{vader['gap_with_contraction']} contain a restored contraction. The labeller saw 'shouldn__ worry' "
-              "(no negation, so Negative); the cleaned text says 'shouldn't worry'. These tweets are label noise "
-              "caused by the corrupted source text, not cleaning errors.", "",
-              f"**Non-English tweets are removed.** Label mix of the removed non-English tweets: {evidence['non_english_mix']}. "
-              "VADER scores text it cannot read as 0, which becomes Neutral. Of the "
+              f"{vader['gap_with_contraction']} contain a restored contraction. On the raw text VADER reads "
+              "'shouldn__ worry' without the negation (Negative), while the cleaned text says 'shouldn't worry'. "
+              "If the labels were computed on the raw text, these tweets carry label noise from the corrupted "
+              "source rather than cleaning errors.", "",
+              "**Non-English tweets are set aside.** The current experiments cover tweets with English text. "
+              f"Label mix of the non-English tweets: {evidence['non_english_mix']}. "
+              "VADER scores words it does not know as 0, which becomes Neutral. Of the "
               f"{vader['non_english_polar'][0]} removed non-English tweets labelled Positive or Negative, "
               f"{vader['non_english_polar'][1]} get the same label from VADER on the raw text: their sentiment comes "
               "from words VADER reads as English, such as Spanish *sin* ('without'), German *die* ('the'), Italian "
-              "*dire* ('to say') and Romanian *care* ('which').", "",
-              f"**Tweets without words are removed.** Label mix: {evidence['no_content_mix']}.", "",
+              "*dire* ('to say') and Romanian *care* ('which'). These patterns are consistent with lexicon-based labels, "
+              "but they do not show that every given label is wrong; the rows stay in `clean_v2_all.csv` for a "
+              "comparison run.", "",
+              f"**Tweets without words are set aside.** Label mix: {evidence['no_content_mix']}.", "",
               "**Negations and direction words are kept in text_norm.** Retained tweets whose text_norm contains: "
               + ", ".join(f"*{w}* {n}" for w, n in evidence["keep_words"].items()) + ". "
               "Standard NLTK stopword lists would delete all of them.", "",
@@ -682,7 +688,7 @@ def render_log(df: pd.DataFrame, log: list[dict], evidence: dict) -> str:
               "`emoji_lost` and 13 feature columns; dropped `n_restored` and `n_unk`.",
               "- Hashtags are no longer split on CamelCase.",
               "- Lost characters are removed and flagged instead of being replaced by `[UNK]`.",
-              "- Non-English tweets and tweets without words are removed (they stay in `clean_v2_all.csv`).",
+              "- Non-English tweets and tweets without words are set aside for the current experiments (they stay in `clean_v2_all.csv`).",
               "- Direction and intensity words (up, down, below, more …) survive stopword removal.",
               "- `group_id` also joins tweets with identical `text_norm`, which fixes template tweets crossing train and test.",
               "- The unreadable-tweet rule also requires < 50 % Latin letters, so 'Rug pull 100% Ahead' is kept.", "",

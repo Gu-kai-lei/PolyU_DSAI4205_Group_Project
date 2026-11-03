@@ -6,7 +6,7 @@ Section numbers follow the final report template, so the same text can be reused
 
 **Status (2 Nov):** the assembled report is `reports/DSAI4205_DataVinci_Interim_Report.docx`. Members 3 and 4 should review the EDA and data-split sections, which member 2 completed for them.
 
-| Part | Owner | Content | Source | Status (27 Oct) |
+| Part | Owner | Content | Source | Status (3 Nov) |
 |---|---|---|---|---|
 | 1 Dataset and task | 2 | Decision problem in two sentences; Table 1 overview and Table 2 data dictionary | `m2_dataset.md` | In the report |
 | 2 EDA | 3 | Data quality table (Table 3), six figures each answering one question, class imbalance | `00_eda` | In the report (done by member 2; member 3 to review) |
@@ -22,7 +22,7 @@ Six embedding and classifier pairs will be compared with the baseline on the sam
 
 ## Questions for the consultation (draft)
 
-1. The labels match VADER on 93% of the tweets, so they were most likely generated automatically. May we report results against these labels and discuss label noise, or should we also relabel a sample by hand?
+1. The labels match VADER on 93% of the tweets, although the original labelling process is unknown. May we report results against these labels and discuss label noise, or should we also relabel a sample by hand?
 2. We use Sentence-BERT only to extract vectors, without fine-tuning, and train separate classifiers on them. Does this meet the requirement that the embedding and the classifier are separate models?
 3. Three of our six models (MLP, TextCNN, BiLSTM) are neural networks. Is that acceptable, or does it count as too little variety between models?
-4. We removed 102 non-English tweets, whose labels are mostly Neutral because VADER cannot read them. Is removing them acceptable?
+4. The current experiments set aside 102 non-English tweets (mostly labelled Neutral) and keep them for a comparison run. Is this acceptable, or should they stay in the main experiments?

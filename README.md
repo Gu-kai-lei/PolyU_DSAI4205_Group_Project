@@ -56,11 +56,11 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 - 原始数据 1,698 条推文，两列：`text` 和 `text_sentiment`，其中 **0 = Neutral，1 = Positive，2 = Negative**；类别分布 Positive 627 / Neutral 575 / Negative 496
 - 当前清洗版本 **clean_v2 保留 1,525 条**：Positive 607（39.8%）/ Neutral 433（28.4%）/ Negative 485（31.8%），最大类与最小类之比 1.40。每一步删了什么、为什么，见 [clean_v2_log.md](data/clean_v2/clean_v2_log.md)
 - 已在仓库里核实的数据问题（`01_cleaning`、`31_label_noise_errors`）：
-  - 标签很可能是 VADER 自动生成的：VADER 在原文上和标签的一致率约 93%，换成另一个情感词典 TextBlob 只有约 60%
+  - 标签和 VADER 规则打分高度一致：VADER 在原文上和标签的一致率 93.0%，另一个情感词典 TextBlob 只有 60.2%。原始标注流程未知，所以只能说"高度一致"，不能断定标签就是 VADER 打的
   - 原文件把弯引号 `’` 连同后一个字符替换成了 `__`（`it’s` → `it__`），emoji 也被破坏；部分推文有双重编码乱码
   - 有完全重复、内容重复和模板推文（如 "Candle of day … closed"）；后者用 `group_id` 分组，划分时不能拆开
-  - 混有西班牙语、印地语拼音等非英文推文，标签大多是 Neutral（VADER 读不懂外语），clean_v2 已删除
-- Baseline（TF-IDF + 逻辑回归，正式划分 `folds_v1` 上 5 折交叉验证）：Macro-F1 0.582、准确率 0.593，见 `results/baseline.csv`
+  - 混有西班牙语、印地语拼音等非英文推文（标签大多是 Neutral）。当前实验只用有英文正文的推文；非英文和没有正文的推文全部保留在 `clean_v2_all.csv`，之后用对照实验检查影响
+- Baseline（TF-IDF + 逻辑回归，正式划分 `folds_v1` 上 5 折交叉验证）：Macro-F1 0.582、准确率 0.592，见 `results/baseline.csv`。这两个数按 5 折 OOF 预测合并计算（报告和 `results/` 都用这个口径）；按折分别算再取平均是 Macro-F1 0.582 ± 0.042、准确率 0.593 ± 0.042
 - EDA（`00_eda`）：Neutral 推文明显更短（中位数 13 词，其余两类 25–26 词）；hashtag 占比越高越可能是 Neutral
 
 ## 分工
@@ -71,10 +71,10 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 |---|---|---|---|---|---|
 | 1 | FENG Dingran | SVM | Baseline、Stacking 集成、模型总对比和选最终模型 | 3.4、4.1、4.2、5.1 | 结果对比（2 分钟） |
 | 2 | GU Kailei | kNN | 清洗和 FastText、错误分析、项目协调、中期报告汇总提交 | 1.3、3.1、3.3（清洗和 FastText）、4.3、5.5、附录 C | 清洗和标签来源（2 分钟） |
-| 3 | Brain & Yang Qitian | XGBoost | EDA（至少 6 张图）、SHAP、商业洞察 | 第 2 章、5.3 | EDA 1 分钟 + 商业洞察 1 分钟 |
+| 3 | CHOI CHUN MAN（主责），YANG Qitian 复核 | XGBoost | EDA（至少 6 张图）、SHAP、商业洞察 | 第 2 章、5.3 | EDA 1 分钟 + 商业洞察 1 分钟 |
 | 4 | CAO Taihe | MLP | 数据划分、PyTorch 训练模板、合并最终 notebook | 3.2、3.5、5.4、附录 A | 公平比较和 MLP（2 分钟） |
 | 5 | YU Guanlin | TextCNN | SBERT 句向量和 token 序列、PPT 模板和统一格式、组织排练 | 3.3（SBERT 和 token 序列） | 文本向量和 TextCNN（2 分钟） |
-| 6 | Brain & Yang Qitian | BiLSTM + Attention | 不平衡处理、报告模板和统一格式、最终提交 | 摘要、1.1、1.2、5.2、5.6 | 开场 1 分钟 + 收尾 1 分钟 |
+| 6 | YANG Qitian（主责），CHOI CHUN MAN 复核 | BiLSTM + Attention | 不平衡处理、报告模板和统一格式、最终提交 | 摘要、1.1、1.2、5.2、5.6 | 开场 1 分钟 + 收尾 1 分钟 |
 
 每人还要在报告 3.4 节写自己模型的一段（英文），写清四件事：嵌入怎么接到分类器、超参数和调参过程、结果、和 baseline 比为什么更好或更差。
 
@@ -117,7 +117,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 </details>
 
 <details>
-<summary><b>3 号 · Brain & Yang Qitian · XGBoost、EDA、商业洞察</b></summary>
+<summary><b>3 号 · CHOI CHUN MAN（YANG Qitian 复核）· XGBoost、EDA、商业洞察</b></summary>
 
 目标：讲清楚"数据长什么样"，以及"结论对投资者有什么用"。
 
@@ -158,7 +158,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 </details>
 
 <details>
-<summary><b>6 号 · Brain & Yang Qitian · BiLSTM、不平衡处理、报告统一</b></summary>
+<summary><b>6 号 · YANG Qitian（CHOI CHUN MAN 复核）· BiLSTM、不平衡处理、报告统一</b></summary>
 
 目标：做最复杂的序列模型和不平衡处理，最后把 6 个人写的章节统一成一份报告。
 
@@ -279,7 +279,7 @@ DSAI4205 Big Data Analytics小组项目，占总分 25%。
 | 交叉验证 / 折 | 先留约 20% 做测试集，最后只用一次；其余分成 5 折轮流验证，调参和选模型看 5 次的平均成绩 | 我们的约定 · 报告模板 3.2 |
 | OOF 预测 | 每条训练推文的概率由训练时没见过它的那一折模型给出；Stacking 只能用它训练，否则等于看到答案 | 我们的约定 |
 | Macro-F1 | 三类各算 F1 再直接平均，每类同样重要；不平衡时比准确率公平，是全组的主指标 | 我们的约定 · 报告模板表 6 |
-| VADER | 按情感词典给句子打分的工具。标签和它一致率 93.0%（TextBlob 只有 60.2%），很可能就是它打的，所以绝不能当特征 | 我们的分析 · notebook 31 |
+| VADER | 按情感词典给句子打分的工具。标签和它一致率 93.0%（TextBlob 只有 60.2%），高度一致但原始标注流程未知；无论如何都绝不能当特征 | 我们的分析 · notebook 31 |
 | text_clean / text_norm | `text_clean` 保留大小写和标点，给 SBERT 和 token 序列；`text_norm` 小写、只留字母、词形还原、去停用词（保留 not、up、down），给 TF-IDF 和 FastText | `data/clean_v2` |
 | SBERT / 冻结 | SBERT 是预训练的句子编码模型；冻结 = 只用它算向量，参数不更新，这样"嵌入和分类器分开"没有争议 | 我们的方案 |
 | run_id | 每次实验的编号，把成绩、超参数和预测文件绑在一起，重跑不覆盖旧结果 | 我们的约定 |

@@ -26,7 +26,7 @@ The choice of *k* matters less than the choice of embedding: across all values o
 
 1. FastText was trained on only about 1,000 tweets per fold, so many nearest neighbours share spelling rather than meaning (*dip* is closest to *sip* and *sit*).
 2. Averaging word vectors loses word order and dilutes short but decisive words such as *not*.
-3. The labels were most likely produced by VADER, which scores individual sentiment words. A linear model on word counts can copy this word-level rule more directly than a vote among similar tweets.
+3. The labels agree closely with VADER, which scores individual sentiment words. If they were produced this way, a linear model on word counts can copy such a word-level rule more directly than a vote among similar tweets.
 
 The largest errors in the out-of-fold confusion matrix (`figures/m2_knn_confusion.png`) are Negative tweets predicted as Positive (167) and Positive tweets predicted as Negative (143).
 

@@ -9,24 +9,24 @@ Content for two slides and a two-minute script (about 240 words, plus one senten
 Figure: `figures/cleaning_funnel.png`
 
 - Repaired the text: 155 tweets with broken encoding, 166 with restored contractions (*it__* → *it's*)
-- Removed 173 tweets: 102 not in English, 39 without any words, 21 unreadable, 11 duplicates
+- Left out 173 tweets: 11 duplicates and 21 unreadable removed; 102 not in English and 39 without words set aside (kept in `clean_v2_all.csv`)
 - Kept hashtags whole: splitting *#stockmarketcrash* adds the word *crash*
 - Near-duplicate tweets share a `group_id` and always stay in the same fold
 
-## Slide 2: The labels were most likely made by VADER
+## Slide 2: The labels agree closely with VADER
 
 Figure: `figures/cleaning_label_by_language.png` (or `figures/analysis_vader_vs_labels.png`)
 
 - VADER, a word-list sentiment tool, reproduces 93.0% of the labels; TextBlob only 60.2%
 - Non-English tweets are 73% Neutral, because VADER cannot read them
-- So our models learn to imitate VADER, and VADER is never used as a feature
+- The original labelling process is unknown; VADER is never used as a feature
 - **[After 11/17]** Tweets that every model gets wrong: one finding from the error analysis
 
 ## Script
 
-**Slide 1.** "Before modelling, we had to repair the data. The file we received had broken characters: curly apostrophes and the letter after them had turned into two underscores, so *it's* became *it__*. We restored only the patterns we could check by hand, which fixed 166 tweets, and repaired the encoding of 155 more. We then removed 173 tweets: duplicates, tweets we could not read, tweets with no words, and 102 tweets that are not in English. One decision needs a reason: we did not split hashtags into words. You will see why on the next slide."
+**Slide 1.** "Before modelling, we had to repair the data. The file we received had broken characters: curly apostrophes and the letter after them had turned into two underscores, so *it's* became *it__*. We restored only the patterns we could check by hand, which fixed 166 tweets, and repaired the encoding of 155 more. We then removed duplicates and tweets we could not read, and set aside tweets with no words and 102 tweets that are not in English, so our current experiments cover English text only. One decision needs a reason: we did not split hashtags into words. You will see why on the next slide."
 
-**Slide 2.** "The dataset description does not say how the tweets were labelled. When we ran VADER, a common rule-based sentiment tool, it gave the same label as the dataset for 93% of the tweets. Another tool, TextBlob, matched only 60%. The non-English tweets show the same pattern: VADER cannot read them, scores them zero, and almost three quarters of them are labelled Neutral. Splitting hashtags would add words such as *crash* that VADER never saw, and the match drops from 92% to 71%. This has three consequences. Our task is really to imitate VADER. VADER's score can never be a model input, because that would leak the answer. And where VADER disagrees with the label, the label itself may be wrong. [Error analysis finding.] Now member 4 will explain how we kept the comparison between models fair."
+**Slide 2.** "The dataset description does not say how the tweets were labelled. When we ran VADER, a common rule-based sentiment tool, it gave the same label as the dataset for 93% of the tweets. Another tool, TextBlob, matched only 60%. The non-English tweets show the same pattern: VADER cannot read them, scores them zero, and almost three quarters of them are labelled Neutral. Splitting hashtags would add words such as *crash* that VADER would not score in the raw text, and the match drops from 92% to 71%. We cannot see the original labelling process, so we treat this as a strong pattern, not a proof. It still has three consequences. If the labels were made this way, our task is effectively to imitate VADER. VADER's score can never be a model input, because it could leak the answer. And where VADER disagrees with the label, the label itself may be uncertain. [Error analysis finding.] Now member 4 will explain how we kept the comparison between models fair."
 
 ## Numbers used (for questions)
 

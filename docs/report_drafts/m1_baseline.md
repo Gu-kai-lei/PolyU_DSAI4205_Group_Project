@@ -1,6 +1,8 @@
 # Member 1 Baseline methodology draft
 
-Status: Methodology draft only. Official Results are pending the shared Data Splits and team Environment. The following describes the implemented procedure; it does not claim an official experiment has been completed.
+Status (27 Oct): methodology draft only; official results were pending the shared data split and team environment.
+
+**Status (2 Nov): official run completed.** Member 2 ran `03_baseline` in `MODE = "team"` on `folds_v1` in the `dsai4205` environment for the interim report; the results are in the table below and in `results/baseline.csv`.
 
 ## Section 3.4 Baseline
 
@@ -12,15 +14,15 @@ Performance is measured using Accuracy, Macro-Precision, Macro-Recall and Macro-
 
 For interpretation, the pipeline is refitted on the full Development Set, and the highest positive Logistic Regression Coefficients are displayed for each class. This refit is used only for interpretation, not to calculate the reported Cross-Validation metrics. Coefficients indicate model associations rather than word frequency or causality.
 
-## Results to complete after official execution
+## Results of the official run (2 Nov)
 
 | Item | Status |
 |---|---|
-| Official run_id and Data Split version | Pending |
-| Pooled OOF Accuracy / Macro-Precision / Macro-Recall / Macro-F1 | Pending |
-| Five-fold mean and standard deviation | Pending |
-| Per-class metrics and Confusion Matrix | Pending |
-| Interpretation of Top Words and typical errors | Pending |
+| Official run_id and Data Split version | `baseline__tfidf__20261102-181839-3628`, `folds_v1` |
+| Pooled OOF Accuracy / Macro-Precision / Macro-Recall / Macro-F1 | 0.592 / 0.605 / 0.577 / 0.582 |
+| Five-fold mean and standard deviation | Accuracy 0.593 ± 0.042; Macro-F1 0.582 ± 0.042 (folds 0.512–0.621) |
+| Per-class metrics and Confusion Matrix | F1 Neutral 0.556, Positive 0.639, Negative 0.550; `figures/baseline_baseline__tfidf__20261102-181839-3628_confusion.png` |
+| Interpretation of Top Words and typical errors | All 12 top Positive and 11 of 12 top Negative words are VADER lexicon entries; 129 Neutral and 145 Negative tweets predicted as Positive (interim report, Section 4.2) |
 
 Do not copy provisional Results into the official table. The notebook and script preserve run_id, parameters, environment information, and data/split hashes for traceability.
 

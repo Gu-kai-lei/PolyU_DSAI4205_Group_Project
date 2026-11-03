@@ -1,6 +1,6 @@
 # 3 号的交付文件
 
-成员：Brain & Yang Qitian　负责：XGBoost、EDA、SHAP、商业洞察
+成员：CHOI CHUN MAN（主责），YANG Qitian 复核　负责：XGBoost、EDA、SHAP、商业洞察
 
 把你的交付文件**直接放进这个文件夹**即可，不用管它们最后放在仓库的哪个位置，也不用先改格式。最后由 2 号（GU Kailei）统一整理到仓库的对应位置，并规范格式。
 
