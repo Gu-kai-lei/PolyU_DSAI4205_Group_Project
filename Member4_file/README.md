@@ -1,20 +1,7 @@
-# 4 号的交付文件
+# Member 4 delivery
 
-成员：CAO Taihe　负责：MLP、数据划分、PyTorch 训练模板、最终 notebook
+Cao Taihe, 24101734d. See the delivery readme and TRAINING_GUIDE.md.
 
-把你的交付文件**直接放进这个文件夹**即可，不用管它们最后放在仓库的哪个位置，也不用先改格式。最后由 2 号（GU Kailei）统一整理到仓库的对应位置，并规范格式。
+Implemented: official grouped splits, reusable PyTorch template, FastText MLP experiments, report sections, presentation and a portable Member-4 notebook.
 
-## 可以放
-
-- notebook（`.ipynb`）和代码（`.py`）
-- 报告章节草稿、PPT 页、实验记录
-- 图片（`.png`）和结果表（`.csv`）
-
-## 不要放
-
-- 数据缓存、嵌入向量和模型权重（`.npy`、`.npz`、`.pt`、`.pth` 等），这些文件太大
-- 密钥、密码和账号信息（例如 `.env`）
-
-## 怎么上传
-
-在 GitHub 上打开这个文件夹，点 **Add file → Upload files**，把文件拖进去。提交说明用中文写清楚是什么，例如"4 号：MLP notebook 第一版"。只放进自己的文件夹，不要改别人的文件夹。
+Full team integration remains blocked by the nine skeleton stages listed in integration_status.json. assemble_team.py refuses to assemble these as a completed submission.

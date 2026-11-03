@@ -1,0 +1,16 @@
+Cao Taihe 24101734d
+Two-minute presentation script
+
+Slide 1  Approximately 55 seconds
+We want every model to face the same unseen content. Our 1,525 cleaned tweets are split into 1,222 development examples and 303 reserved test examples. We use StratifiedGroupKFold with seed 42, then divide development into five validation folds. Tweets sharing a group id never cross these boundaries. This prevents template and near-duplicate leakage. The saved CSV and hash manifest allow every member to reproduce the same comparison. Learned embeddings and scaling stay inside training partitions. We select configurations with development Macro-F1, and have not computed any holdout scores.
+
+Slide 2  Approximately 65 seconds
+Our embedding and classifier are separate models. FastText is trained from scratch and its 100-dimensional mean vectors enter an MLP with 512 and 256 hidden units. We use BatchNorm, Dropout and AdamW. Early stopping uses a further grouped split inside training, followed by a full outer-training refit. Initial MLP Macro-F1 is 0.5403. Stronger regularization and class weighting give 0.5234 and 0.5301, so neither improves it. The TF-IDF logistic-regression reference scores 0.5820 on the same folds. Our MLP therefore does not beat this reference. Lost word order and limited data are possible explanations. The shared training loop, saved probabilities and portable notebook are ready for team integration. The full six-model submission still needs the other owners' implementations.
+
+Questions and answers
+Why use groups? Near-duplicate or template tweets otherwise make validation easier than genuinely unseen content.
+Why Macro-F1? It treats each sentiment class equally and exposes weak minority-class performance.
+Why not evaluate test now? We keep its results independent of model and ensemble selection.
+Is this a chronological forecast? No. Grouped random splits measure unseen content within this dataset.
+Is the MLP better? No, it trails the same-fold reference in this experiment.
+Does the successful notebook prove the group project is complete? No. It validates Member 4's available pipeline. Missing team stages are explicitly listed.

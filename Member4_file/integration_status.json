@@ -1,0 +1,60 @@
+{
+  "full_team_submission_ready": false,
+  "member4_ready": true,
+  "dependencies": [
+    {
+      "stage": "00_eda",
+      "implemented": false,
+      "code_lines": 16,
+      "path": "notebooks/01_data/00_eda.ipynb"
+    },
+    {
+      "stage": "10_emb_sbert",
+      "implemented": false,
+      "code_lines": 16,
+      "path": "notebooks/02_embeddings/10_emb_sbert.ipynb"
+    },
+    {
+      "stage": "12_emb_tokens",
+      "implemented": false,
+      "code_lines": 16,
+      "path": "notebooks/02_embeddings/12_emb_tokens.ipynb"
+    },
+    {
+      "stage": "20_m1_svm",
+      "implemented": false,
+      "code_lines": 16,
+      "path": "notebooks/03_models/20_m1_svm.ipynb"
+    },
+    {
+      "stage": "22_m3_xgboost",
+      "implemented": false,
+      "code_lines": 16,
+      "path": "notebooks/03_models/22_m3_xgboost.ipynb"
+    },
+    {
+      "stage": "24_m5_textcnn",
+      "implemented": false,
+      "code_lines": 16,
+      "path": "notebooks/03_models/24_m5_textcnn.ipynb"
+    },
+    {
+      "stage": "25_m6_bilstm",
+      "implemented": false,
+      "code_lines": 16,
+      "path": "notebooks/03_models/25_m6_bilstm.ipynb"
+    },
+    {
+      "stage": "30_ensemble",
+      "implemented": false,
+      "code_lines": 16,
+      "path": "notebooks/04_analysis/30_ensemble.ipynb"
+    },
+    {
+      "stage": "32_imbalance",
+      "implemented": false,
+      "code_lines": 16,
+      "path": "notebooks/04_analysis/32_imbalance.ipynb"
+    }
+  ]
+}

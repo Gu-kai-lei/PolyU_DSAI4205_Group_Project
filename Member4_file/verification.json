@@ -1,0 +1,15 @@
+{
+  "regression_tests": 4,
+  "passed": 4,
+  "checks": [
+    "group isolation and deterministic splits",
+    "padding and empty sequence handling",
+    "deterministic training and singleton batches",
+    "cache id and probability-column alignment"
+  ],
+  "notebook_fresh_kernel": true,
+  "notebook_all_code_cells": 13,
+  "fresh_kernel_macro_f1_matches_script": true,
+  "holdout_evaluated": false,
+  "team_assembly_gate": "correctly refuses 9 missing team stages"
+}

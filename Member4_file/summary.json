@@ -1,0 +1,167 @@
+{
+  "author": "Cao Taihe",
+  "student_id": "24101734d",
+  "embedding": "fasttext_mean",
+  "development_rows": 1222,
+  "test_rows": 303,
+  "holdout_evaluated": false,
+  "selected_source_run": "mlp__fasttext_mean__20261102-174543-ccbe",
+  "selected_prediction_run": "mlp_selected__fasttext_mean__20261102-174622-8d3b",
+  "selected_parameters": {
+    "batch_size": 64,
+    "class_weight": false,
+    "dropout": 0.5,
+    "early_stopping": "grouped inner split, patience 7, macro_f1",
+    "epochs_by_fold": [
+      1,
+      20,
+      11,
+      19,
+      6
+    ],
+    "hidden": [
+      512,
+      256
+    ],
+    "lr": 0.001,
+    "max_epochs": 50,
+    "name": "initial",
+    "optimizer": "AdamW",
+    "scaler": "training-only StandardScaler",
+    "seed": 42,
+    "weight_decay": 0.01
+  },
+  "full_refit_epochs": 11,
+  "selected_cv": {
+    "run_id": "mlp__fasttext_mean__20261102-174543-ccbe",
+    "timestamp": "2026-11-02T17:45:57",
+    "model": "mlp",
+    "embedding": "fasttext_mean",
+    "split": "cv",
+    "data_version": "clean_v2",
+    "split_version": "folds_v1",
+    "seed": 42,
+    "accuracy": 0.5400981996726678,
+    "macro_precision": 0.5486579646356681,
+    "macro_recall": 0.5363534822890196,
+    "macro_f1": 0.5402844194289936,
+    "f1_neutral": 0.5637795275590551,
+    "f1_positive": 0.5613682092555332,
+    "f1_negative": 0.49570552147239266,
+    "params": "{\"batch_size\": 64, \"class_weight\": false, \"dropout\": 0.5, \"early_stopping\": \"grouped inner split, patience 7, macro_f1\", \"epochs_by_fold\": [1, 20, 11, 19, 6], \"hidden\": [512, 256], \"lr\": 0.001, \"max_epochs\": 50, \"name\": \"initial\", \"optimizer\": \"AdamW\", \"scaler\": \"training-only StandardScaler\", \"seed\": 42, \"weight_decay\": 0.01}",
+    "train_seconds": 9.898618099978194,
+    "notes": "pooled outer OOF; inner early stopping; CV tuning estimate, not nested unbiased final performance"
+  },
+  "baseline_reference": {
+    "run_id": "baseline_reference_m4__tfidf__20261102-174518-3fd2",
+    "timestamp": "2026-11-02T17:45:18",
+    "model": "baseline_reference_m4",
+    "embedding": "tfidf",
+    "split": "cv",
+    "data_version": "clean_v2",
+    "split_version": "folds_v1",
+    "seed": 42,
+    "accuracy": 0.5924713584288053,
+    "macro_precision": 0.6053494906608006,
+    "macro_recall": 0.5767377066207892,
+    "macro_f1": 0.5819958867503482,
+    "f1_neutral": 0.5562913907284768,
+    "f1_positive": 0.639212175470009,
+    "f1_negative": 0.5504840940525588,
+    "params": "{\"C\": 1.0, \"max_iter\": 2000, \"ngram_range\": [1, 1]}",
+    "train_seconds": 0.3727993000065908,
+    "notes": "Independent reference; does not replace member 1 results; no test evaluation"
+  },
+  "embedding_details": {
+    "signature": {
+      "data_hash": "a32f4006b1e36d6704be23fb112547826fb7d223740f39d7ee5c8a81ee949f37",
+      "split_hash": "476bbb6f1516ca51117e7a6e2df06c9a411bbc24b6f2563a5da52cca882d48e0",
+      "params": {
+        "vector_size": 100,
+        "window": 5,
+        "min_count": 2,
+        "sg": 1,
+        "min_n": 3,
+        "max_n": 5,
+        "epochs": 50,
+        "bucket": 200000
+      },
+      "seed": 42,
+      "gensim": "4.4.0"
+    },
+    "audits": [
+      {
+        "tag": "fold0",
+        "train_rows": 980,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "05be59d566e2be6cbeb292ffdaa553d414f1f8b1cf648302930be98358798566"
+      },
+      {
+        "tag": "fold1",
+        "train_rows": 975,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "e0b9fbc8628da9e173685a7844b839135b22aa0a40909e9b82fdb3f760c014e1"
+      },
+      {
+        "tag": "fold2",
+        "train_rows": 978,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "8bb695ea784c1100c44f83c9094d594a25be3841e7b82038511fe2026a9c159e"
+      },
+      {
+        "tag": "fold3",
+        "train_rows": 978,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "717131d50097e79461177e2344ae6d99484124b20e87d7e4bd1fdc99b8e1de71"
+      },
+      {
+        "tag": "fold4",
+        "train_rows": 977,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "9a1729f4ae5c85e5f2086a9efb2a069370e23b5e039ce2d6c92f82cbc67b76c6"
+      },
+      {
+        "tag": "full",
+        "train_rows": 1222,
+        "encoded_rows": 1525,
+        "train_ids_sha256": "c45379a4d25b5668532a1b3fa0f5291759d42116a2466a886c33ef518b984eec"
+      }
+    ],
+    "seconds": 25.077122800052166,
+    "embedding": "scratch-trained FastText skip-gram mean pooling, 100 dimensions"
+  },
+  "mlp_parameters": 185347,
+  "mlp_weight_bytes": 741388,
+  "feature_bytes_development": 488800,
+  "final_refit_seconds": 1.2520321999909356,
+  "holdout_prediction_seconds": 0.00747190008405596,
+  "total_wall_seconds": 65.30137949995697,
+  "environment": {
+    "python": "3.13.9",
+    "packages": {
+      "numpy": "2.3.5",
+      "scipy": "1.16.3",
+      "pandas": "2.3.3",
+      "scikit-learn": "1.7.2",
+      "torch": "2.9.1",
+      "gensim": "4.4.0",
+      "matplotlib": "3.10.6"
+    },
+    "os": "Windows-11-10.0.26200-SP0",
+    "cpu": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+    "logical_cpus": 24,
+    "ram_gb": 15.38,
+    "torch_threads": 2,
+    "cuda_available": false,
+    "device": "cpu",
+    "threading_layer": "GNU"
+  },
+  "caution": "Three configurations selected on outer CV. Selected score is optimistic; final team holdout remains unscored.",
+  "remaining_team_dependencies": [
+    "member 1 SVM/ensemble/final model selection",
+    "member 3 EDA/XGBoost",
+    "member 5 multilingual SBERT/tokens/TextCNN",
+    "member 6 BiLSTM/imbalance",
+    "final team comparison and report"
+  ]
+}
