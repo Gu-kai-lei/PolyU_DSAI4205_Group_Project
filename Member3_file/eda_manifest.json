@@ -1,0 +1,61 @@
+{
+  "author": "YANG Qitian (24128112D)",
+  "task": "Member 3 EDA handoff for 4 November 2026",
+  "data_version": "clean_v2",
+  "raw_n": 1698,
+  "clean_n": 1525,
+  "removed_n": 173,
+  "class_order": [
+    "Neutral",
+    "Positive",
+    "Negative"
+  ],
+  "raw_counts": {
+    "Neutral": 575,
+    "Positive": 627,
+    "Negative": 496
+  },
+  "clean_counts": {
+    "Neutral": 433,
+    "Positive": 607,
+    "Negative": 485
+  },
+  "inputs": {
+    "raw": {
+      "filename": "raw.csv",
+      "sha256": "b3a4e68589e051f490d42733a2df28581d31c7722af166fbf7f524008b18f419"
+    },
+    "clean": {
+      "filename": "clean_v2.csv",
+      "sha256": "82800e84083982d2f4735c61281f19d78329df419bf429acf7e58f7a8dda126d"
+    },
+    "all": {
+      "filename": "clean_v2_all.csv",
+      "sha256": "beebfe4505aeed24ba28a001ad1e917f5314d63cd70bd13c8d43463ab560b1bd"
+    }
+  },
+  "environment": {
+    "python": "3.12.14",
+    "pandas": "2.2.3",
+    "numpy": "1.26.4",
+    "matplotlib": "3.9.2"
+  },
+  "limits": [
+    "Full supplied snapshot used for descriptive course EDA; no model fitting, tuning or test-score inspection.",
+    "Market subsets overlap and are inferred by supplied rules.",
+    "VADER label provenance is the team hypothesis, not independently confirmed by this EDA.",
+    "No price, return, timestamp or user identifiers are available as dedicated source columns."
+  ],
+  "word_chart_exclusions": [
+    "amp",
+    "bearmarket",
+    "co",
+    "http",
+    "https",
+    "rt",
+    "stockmarketcrash",
+    "user",
+    "www"
+  ],
+  "randomness": "None; deterministic summaries and plots."
+}

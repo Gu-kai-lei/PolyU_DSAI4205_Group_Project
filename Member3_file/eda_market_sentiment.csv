@@ -1,0 +1,10 @@
+﻿market,sentiment,tweets,market_n,share_within_market
+Crypto,Neutral,135,481,0.2806652806652807
+Crypto,Positive,194,481,0.40332640332640335
+Crypto,Negative,152,481,0.316008316008316
+US equities,Neutral,31,111,0.27927927927927926
+US equities,Positive,42,111,0.3783783783783784
+US equities,Negative,38,111,0.34234234234234234
+India,Neutral,62,206,0.30097087378640774
+India,Positive,83,206,0.4029126213592233
+India,Negative,61,206,0.2961165048543689

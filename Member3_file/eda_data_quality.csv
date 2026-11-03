@@ -1,0 +1,12 @@
+﻿measure,raw,clean_v2,interpretation
+Unit of analysis,One tweet,One tweet,"Counts describe records, not unique people"
+Records,1698,1525,173 excluded (10.2%)
+Missing or blank text or missing label,0,0,Logical OR across required fields
+Invalid sentiment labels,0,0,"Valid codes are 0, 1, 2"
+Exact duplicate extra rows,9,0,Copies beyond the first occurrence
+Median characters,139.0,135.0,Raw text versus text_clean; cleaning also changes the retained population
+Median whitespace tokens,21.0,21.0,"Whitespace tokens, not transformer tokens"
+Unique related-text groups,Not assigned,1513,Groups are supplied by the cleaning pipeline
+Records in non-singleton groups,Not assigned,20,Keep related records in the same split and fold
+Non-singleton groups,Not assigned,8,Near-duplicates remain grouped rather than all being deleted
+Records with lost-character flag,Not audited here,397,Pipeline flag; not a count of recoverable emoji

@@ -1,0 +1,24 @@
+﻿field,dtype,role,definition
+id,int64,identifier,Stable zero-based row ID in the raw CSV
+group_id,int64,grouping only,Related tweets share a group; keep the group in one fold
+label,int64,target,0 Neutral; 1 Positive; 2 Negative
+label_name,object,target display,Text form of label; not an input feature
+text_raw,object,audit,Original tweet text
+text_clean,object,text input,Repaired text preserving case and punctuation
+text_norm,object,text input,Team-normalized lemmatized text; stopwords removed with exceptions
+hashtags,object,EDA,Lowercase hashtag list separated by spaces
+lang,object,quality,Supplied language heuristic; not independent language verification
+emoji_lost,int64,quality or candidate feature,Flag for lost source characters
+char_len,int64,candidate feature,Number of characters in text_clean
+word_len,int64,candidate feature,Number of whitespace tokens in text_clean
+n_hashtags,int64,candidate feature,Hashtag count before hashtag normalization
+n_mentions,int64,candidate feature,Mention count before anonymization
+n_cashtags,int64,candidate feature,Cashtag count
+n_exclaim,int64,candidate feature,Number of exclamation marks in text_clean
+n_question,int64,candidate feature,Number of question marks in text_clean
+caps_ratio,float64,candidate feature,Uppercase share among letters
+hashtag_ratio,float64,candidate feature,Hashtags per whitespace token in supplied cleaning rules
+is_hashtag_spam,int64,candidate feature,Rule flag for hashtag_ratio >= 0.6; not verified spam
+domain_crypto,int64,candidate feature,Heuristic crypto mention flag from hashtags or cashtags
+domain_india,int64,candidate feature,Heuristic India market mention flag; can overlap
+domain_us,int64,candidate feature,Heuristic US equity mention flag; can overlap

@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="864pt" height="468pt" viewBox="0 0 864 468" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-03T16:54:37.891382</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.9.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 468 
+L 864 468 
+L 864 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 146.88 388.44 
+L 829.44 388.44 
+L 829.44 93.6 
+L 146.88 93.6 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 146.88 107.001818 
+L 338.450894 107.001818 
+L 338.450894 164.813583 
+L 146.88 164.813583 
+z
+" clip-path="url(#pf0a0fa094a)" style="fill: #64748b"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 146.88 212.114118 
+L 337.504865 212.114118 
+L 337.504865 269.925882 
+L 146.88 269.925882 
+z
+" clip-path="url(#pf0a0fa094a)" style="fill: #64748b"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 146.88 317.226417 
+L 352.31068 317.226417 
+L 352.31068 375.038182 
+L 146.88 375.038182 
+z
+" clip-path="url(#pf0a0fa094a)" style="fill: #64748b"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 338.450894 107.001818 
+L 613.745364 107.001818 
+L 613.745364 164.813583 
+L 338.450894 164.813583 
+z
+" clip-path="url(#pf0a0fa094a)" style="fill: #008b76"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 337.504865 212.114118 
+L 595.770811 212.114118 
+L 595.770811 269.925882 
+L 337.504865 269.925882 
+z
+" clip-path="url(#pf0a0fa094a)" style="fill: #008b76"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 352.31068 317.226417 
+L 627.322718 317.226417 
+L 627.322718 375.038182 
+L 352.31068 375.038182 
+z
+" clip-path="url(#pf0a0fa094a)" style="fill: #008b76"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 613.745364 107.001818 
+L 829.44 107.001818 
+L 829.44 164.813583 
+L 613.745364 164.813583 
+z
+" clip-path="url(#pf0a0fa094a)" style="fill: #cb573f"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 595.770811 212.114118 
+L 829.44 212.114118 
+L 829.44 269.925882 
+L 595.770811 269.925882 
+z
+" clip-path="url(#pf0a0fa094a)" style="fill: #cb573f"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 627.322718 317.226417 
+L 829.44 317.226417 
+L 829.44 375.038182 
+L 627.322718 375.038182 
+z
+" clip-path="url(#pf0a0fa094a)" style="fill: #cb573f"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="mdd97605ebd" d="M 0 0 
+L 0 3.5 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#mdd97605ebd" x="146.88" y="388.44" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font: 11px 'DejaVu Sans'; text-anchor: middle" x="146.88" y="403.798281" transform="rotate(-0 146.88 403.798281)">0%</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#mdd97605ebd" x="283.392" y="388.44" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font: 11px 'DejaVu Sans'; text-anchor: middle" x="283.392" y="403.798281" transform="rotate(-0 283.392 403.798281)">20%</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#mdd97605ebd" x="419.904" y="388.44" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font: 11px 'DejaVu Sans'; text-anchor: middle" x="419.904" y="403.798281" transform="rotate(-0 419.904 403.798281)">40%</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#mdd97605ebd" x="556.416" y="388.44" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font: 11px 'DejaVu Sans'; text-anchor: middle" x="556.416" y="403.798281" transform="rotate(-0 556.416 403.798281)">60%</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5">
+      <g>
+       <use xlink:href="#mdd97605ebd" x="692.928" y="388.44" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font: 11px 'DejaVu Sans'; text-anchor: middle" x="692.928" y="403.798281" transform="rotate(-0 692.928 403.798281)">80%</text>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#mdd97605ebd" x="829.44" y="388.44" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font: 11px 'DejaVu Sans'; text-anchor: middle" x="829.44" y="403.798281" transform="rotate(-0 829.44 403.798281)">100%</text>
+     </g>
+    </g>
+    <g id="text_7">
+     <text style="font: 11px 'DejaVu Sans'; text-anchor: middle" x="488.16" y="418.444219" transform="rotate(-0 488.16 418.444219)">Sentiment share within flagged market</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_7">
+      <defs>
+       <path id="mc3ea6770e0" d="M 0 0 
+L -3.5 0 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#mc3ea6770e0" x="146.88" y="135.907701" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="font: 11px 'DejaVu Sans'" transform="translate(103.14 134.763872)">Crypto</text>
+      <text style="font: 11px 'DejaVu Sans'" transform="translate(94.111406 147.081466)">(n=481)</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#mc3ea6770e0" x="146.88" y="241.02" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <text style="font: 11px 'DejaVu Sans'" transform="translate(77.704219 239.876172)">US equities</text>
+      <text style="font: 11px 'DejaVu Sans'" transform="translate(94.111406 252.193766)">(n=111)</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_9">
+      <g>
+       <use xlink:href="#mc3ea6770e0" x="146.88" y="346.132299" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_10">
+      <text style="font: 11px 'DejaVu Sans'" transform="translate(112.883594 344.988471)">India</text>
+      <text style="font: 11px 'DejaVu Sans'" transform="translate(94.111406 357.306065)">(n=206)</text>
+     </g>
+    </g>
+   </g>
+   <g id="patch_12">
+    <path d="M 146.88 388.44 
+L 146.88 93.6 
+" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 146.88 388.44 
+L 829.44 388.44 
+" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_11">
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(223.584744 132.784216)">28.1%</text>
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(217.633572 145.10181)">(n=135)</text>
+   </g>
+   <g id="text_12">
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(223.111729 237.896516)">27.9%</text>
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(220.987354 250.214109)">(n=31)</text>
+   </g>
+   <g id="text_13">
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(230.514637 343.008815)">30.1%</text>
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(228.390262 355.326409)">(n=62)</text>
+   </g>
+   <g id="text_14">
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(457.017426 132.784216)">40.3%</text>
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(451.066254 145.10181)">(n=194)</text>
+   </g>
+   <g id="text_15">
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(447.557135 237.896516)">37.8%</text>
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(445.43276 250.214109)">(n=42)</text>
+   </g>
+   <g id="text_16">
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(470.735996 343.008815)">40.3%</text>
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(468.611621 355.326409)">(n=83)</text>
+   </g>
+   <g id="text_17">
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(702.511979 132.784216)">31.6%</text>
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(696.560807 145.10181)">(n=152)</text>
+   </g>
+   <g id="text_18">
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(693.524702 237.896516)">34.2%</text>
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(691.400327 250.214109)">(n=38)</text>
+   </g>
+   <g id="text_19">
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(709.300656 343.008815)">29.6%</text>
+    <text style="fill: #ffffff; font: 700 11px 'DejaVu Sans'" transform="translate(707.176281 355.326409)">(n=61)</text>
+   </g>
+  </g>
+  <g id="text_20">
+   <text style="fill: #172b3a; font: 700 18px 'DejaVu Sans'; text-anchor: start" x="51.84" y="23.037188" transform="rotate(-0 51.84 23.037188)">Sentiment across rule tagged market mentions</text>
+  </g>
+  <g id="text_21">
+   <text style="fill: #475569; font: 11px 'DejaVu Sans'; text-anchor: start" x="51.84" y="38.376" transform="rotate(-0 51.84 38.376)">These are overlapping hashtag and cashtag subsets, not representative samples of whole markets.</text>
+  </g>
+  <g id="text_22">
+   <text style="fill: #475569; font: 9px 'DejaVu Sans'" transform="translate(51.84 443.163937)">Source: clean_v2 domain flags. 774 tweets have no market flag; 45 have multiple flags.</text>
+   <text style="fill: #475569; font: 9px 'DejaVu Sans'" transform="translate(51.84 453.492281)">Each row has its own denominator. No geographic location, return or time trend is inferred.</text>
+  </g>
+  <g id="legend_1">
+   <g id="patch_14">
+    <path d="M 349.456094 60.352344 
+L 371.456094 60.352344 
+L 371.456094 52.652344 
+L 349.456094 52.652344 
+z
+" style="fill: #64748b"/>
+   </g>
+   <g id="text_23">
+    <text style="font: 11px 'DejaVu Sans'; text-anchor: start" x="380.256094" y="60.352344" transform="rotate(-0 380.256094 60.352344)">Neutral</text>
+   </g>
+   <g id="patch_15">
+    <path d="M 442.856406 60.352344 
+L 464.856406 60.352344 
+L 464.856406 52.652344 
+L 442.856406 52.652344 
+z
+" style="fill: #008b76"/>
+   </g>
+   <g id="text_24">
+    <text style="font: 11px 'DejaVu Sans'; text-anchor: start" x="473.656406" y="60.352344" transform="rotate(-0 473.656406 60.352344)">Positive</text>
+   </g>
+   <g id="patch_16">
+    <path d="M 538.054531 60.352344 
+L 560.054531 60.352344 
+L 560.054531 52.652344 
+L 538.054531 52.652344 
+z
+" style="fill: #cb573f"/>
+   </g>
+   <g id="text_25">
+    <text style="font: 11px 'DejaVu Sans'; text-anchor: start" x="568.854531" y="60.352344" transform="rotate(-0 568.854531 60.352344)">Negative</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pf0a0fa094a">
+   <rect x="146.88" y="93.6" width="682.56" height="294.84"/>
+  </clipPath>
+ </defs>
+</svg>

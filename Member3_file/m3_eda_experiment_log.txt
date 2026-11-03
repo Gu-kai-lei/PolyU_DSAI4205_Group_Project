@@ -1,0 +1,16 @@
+Member 3 EDA experiment record
+Author: YANG Qitian 24128112D
+Milestone: 4 November 2026 EDA handoff
+
+Implemented six descriptive plots and their underlying tables from the supplied raw and clean_v2 snapshots.
+Reused and credited member 2 cleaning; no source rows or labels were modified.
+Validated IDs, retained-row membership, source text, label codes, field completeness and text lengths.
+Preserved market overlap and per-group denominators; used categorical proportions rather than numerical label correlation.
+Kept full-snapshot EDA separate from classifier training and held-out model scoring.
+Measured raw N=1698, clean N=1525, excluded N=173; largest/smallest retained class ratio=607/433.
+Median clean character lengths: Neutral 86, Positive 156, Negative 161.
+Word display excludes only documented collection and technical tokens; no model input was changed.
+Compared readability and labels during visual review; supplied loss-character examples are selected examples, not a human-label audit.
+Actual execution environment: {"python": "3.12.14", "pandas": "2.2.3", "numpy": "1.26.4", "matplotlib": "3.9.2"}
+Data SHA256 hashes and further limits: eda_manifest.json.
+Next tasks: receive official splits and embeddings; train XGBoost; explain the fitted model using SHAP.
