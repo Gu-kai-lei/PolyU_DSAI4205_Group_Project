@@ -39,3 +39,7 @@ Thumbs.db
 .vscode/
 .idea/
 
+
+# 4 号测试和便携 notebook 的临时输出
+local_artifacts/
+member4_notebook_run/
