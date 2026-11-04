@@ -1,0 +1,83 @@
+{
+  "embedding": "fasttext_mean",
+  "development_rows": 1222,
+  "test_rows": 303,
+  "holdout_evaluated": false,
+  "selected_source_run": "mlp__fasttext_mean__20261104-103233-2f07",
+  "selected_parameters": {
+    "name": "regularized",
+    "dropout": 0.3,
+    "lr": 0.0005,
+    "weight_decay": 0.05,
+    "class_weight": false,
+    "hidden": [
+      512,
+      256
+    ],
+    "batch_size": 64,
+    "max_epochs": 50,
+    "patience": 7,
+    "epochs_by_fold": [
+      4,
+      19,
+      23,
+      7,
+      14
+    ]
+  },
+  "full_refit_epochs": 14,
+  "selected_cv": {
+    "run_id": "mlp__fasttext_mean__20261104-103233-2f07",
+    "timestamp": "2026-11-04T10:32:33",
+    "model": "mlp",
+    "embedding": "fasttext_mean",
+    "split": "cv",
+    "data_version": "clean_v2",
+    "split_version": "folds_v1",
+    "seed": 42,
+    "accuracy": 0.5335515548281505,
+    "macro_precision": 0.5522848399873016,
+    "macro_recall": 0.5300782375771513,
+    "macro_f1": 0.5345251048755287,
+    "f1_neutral": 0.5475792988313857,
+    "f1_positive": 0.54323499491353,
+    "f1_negative": 0.5127610208816705,
+    "params": "{\"batch_size\": 64, \"class_weight\": false, \"dropout\": 0.3, \"early_stopping\": \"grouped inner split, patience 7, macro_f1\", \"epochs_by_fold\": [4, 19, 23, 7, 14], \"hidden\": [512, 256], \"lr\": 0.0005, \"max_epochs\": 50, \"name\": \"regularized\", \"optimizer\": \"AdamW\", \"scaler\": \"training-only StandardScaler\", \"seed\": 42, \"weight_decay\": 0.05}",
+    "train_seconds": 10.28411700000288,
+    "notes": "pooled outer OOF; inner early stopping; selected on the same outer CV, so the best score is optimistic"
+  },
+  "baseline_reference": {
+    "run_id": "baseline_reference_m4__tfidf__20261104-103242-a73a",
+    "timestamp": "2026-11-04T10:32:42",
+    "model": "baseline_reference_m4",
+    "embedding": "tfidf",
+    "split": "cv",
+    "data_version": "clean_v2",
+    "split_version": "folds_v1",
+    "seed": 42,
+    "accuracy": 0.5924713584288053,
+    "macro_precision": 0.6053494906608006,
+    "macro_recall": 0.5767377066207892,
+    "macro_f1": 0.5819958867503482,
+    "f1_neutral": 0.5562913907284768,
+    "f1_positive": 0.639212175470009,
+    "f1_negative": 0.5504840940525588,
+    "params": "{\"C\": 1.0, \"max_iter\": 2000, \"ngram_range\": [1, 1]}",
+    "train_seconds": 0.26780560000042897,
+    "notes": "independent same-fold reference; does not replace member 1's results; no test evaluation"
+  },
+  "embedding_seconds": 16.75300650000281,
+  "total_wall_seconds": 47.486696199994185,
+  "environment": {
+    "python": "3.11.17",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.3",
+      "scikit-learn": "1.5.2",
+      "torch": "2.5.1",
+      "gensim": "4.3.3",
+      "matplotlib": "3.9.2"
+    }
+  },
+  "caution": "Three configurations compared on the same outer CV: the selected score is optimistic; the test split is not scored."
+}

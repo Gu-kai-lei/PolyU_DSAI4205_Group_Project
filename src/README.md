@@ -10,6 +10,9 @@ Notebook 通过这里的函数读取数据、计算指标和保存缓存。
 | `cache.py` | 按样本 ID 对齐嵌入，按 run_id 保存预测概率 |
 | `cleaning.py` | clean_v1 的清洗流程（已冻结，只为复现 v1 保留）；当前版本的清洗脚本是 `data/clean_v2/clean_v2.py` |
 | `fasttext_emb.py` | 按折训练 FastText，生成平均和 SIF 句向量及 token 向量序列 |
+| `splitting.py` | 生成和检查固定数据划分 `splits/folds_v1.csv`（4 号） |
+| `training.py` | PyTorch 训练模板：MLP、掩码池化、早停训练和概率预测，给 4、5、6 号共用（4 号，用法见 `Member4_file/TRAINING_GUIDE.md`） |
+| `member4.py` | 4 号的 FastText + MLP 实验，由 `23_m4_mlp` 调用 |
 
 修改公共函数的参数或返回值前，请先与维护人协调，并同步受影响的 Notebook。
 
