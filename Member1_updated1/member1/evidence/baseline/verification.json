@@ -1,0 +1,11 @@
+{
+  "tests_passed": 8,
+  "baseline_team_run_completed": true,
+  "pip_check": "No broken requirements found",
+  "notebook_schema_and_code_syntax": "passed",
+  "notebook_fresh_kernel_executed": false,
+  "figures_visually_checked": true,
+  "holdout_evaluated": false,
+  "split_sha256": "476bbb6f1516ca51117e7a6e2df06c9a411bbc24b6f2563a5da52cca882d48e0",
+  "run_id": "baseline__tfidf__20261104-222636-b258"
+}

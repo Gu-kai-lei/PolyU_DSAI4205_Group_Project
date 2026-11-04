@@ -1,0 +1,1 @@
+Derived split evidence from Member4_file. Only id, group_id, fold and label are retained; model predictions are excluded. summary.json retains the recorded data/split signatures and embedding audit. Original source-file hashes are recorded in member1/split_provenance.json. These files support exact split recovery without requiring the full Member-4 upload.

@@ -1,0 +1,54 @@
+{
+  "run_id": "baseline__tfidf__20261104-222636-b258",
+  "status": "Team splits",
+  "data_version": "clean_v2",
+  "split_version": "folds_v1",
+  "data_sha256": "82800e84083982d2f4735c61281f19d78329df419bf429acf7e58f7a8dda126d",
+  "split_snapshot_sha256": "4f8c56e18550dc73d489c154e267d62e3059e4d2e4a2ee9f321484d4b3ea1c07",
+  "seed": 42,
+  "data_file": "/Users/ryan/Desktop/DSAI group project/data/clean_v2/clean_v2.csv",
+  "retained_rows": 1525,
+  "development_rows": 1222,
+  "holdout_rows": 303,
+  "holdout_evaluated": false,
+  "cv_mean": {
+    "accuracy": 0.5926763174411729,
+    "precision_macro": 0.607841628490272,
+    "recall_macro": 0.5766915491081388,
+    "f1_macro": 0.581646773643863
+  },
+  "cv_std_sample": {
+    "accuracy": 0.041676630165236705,
+    "precision_macro": 0.04388513527596386,
+    "recall_macro": 0.04102336288778757,
+    "f1_macro": 0.04227311891979405
+  },
+  "pooled_oof": {
+    "accuracy": 0.5924713584288053,
+    "precision_macro": 0.6053494906608006,
+    "recall_macro": 0.5767377066207892,
+    "f1_macro": 0.5819958867503482
+  },
+  "parameters": {
+    "tfidf_ngram_range": [
+      1,
+      1
+    ],
+    "tfidf_min_df": 1,
+    "lr_C": 1.0,
+    "lr_max_iter": 2000,
+    "class_weight": null
+  },
+  "cv_fit_seconds": 0.41716195899425657,
+  "test_predictions_status": "deferred; no test inference or evaluation",
+  "versions": {
+    "python": "3.11.18",
+    "sklearn": "1.5.2",
+    "numpy": "1.26.4",
+    "pandas": "2.2.3",
+    "scipy": "1.13.1",
+    "matplotlib": "3.9.2"
+  },
+  "platform": "macOS-15.7.2-arm64-arm-64bit",
+  "split_file_sha256": "476bbb6f1516ca51117e7a6e2df06c9a411bbc24b6f2563a5da52cca882d48e0"
+}

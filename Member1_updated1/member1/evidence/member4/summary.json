@@ -1,0 +1,62 @@
+{
+  "development_rows": 1222,
+  "test_rows": 303,
+  "embedding_details": {
+    "signature": {
+      "data_hash": "a32f4006b1e36d6704be23fb112547826fb7d223740f39d7ee5c8a81ee949f37",
+      "split_hash": "476bbb6f1516ca51117e7a6e2df06c9a411bbc24b6f2563a5da52cca882d48e0",
+      "params": {
+        "vector_size": 100,
+        "window": 5,
+        "min_count": 2,
+        "sg": 1,
+        "min_n": 3,
+        "max_n": 5,
+        "epochs": 50,
+        "bucket": 200000
+      },
+      "seed": 42,
+      "gensim": "4.4.0"
+    },
+    "audits": [
+      {
+        "tag": "fold0",
+        "train_rows": 980,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "05be59d566e2be6cbeb292ffdaa553d414f1f8b1cf648302930be98358798566"
+      },
+      {
+        "tag": "fold1",
+        "train_rows": 975,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "e0b9fbc8628da9e173685a7844b839135b22aa0a40909e9b82fdb3f760c014e1"
+      },
+      {
+        "tag": "fold2",
+        "train_rows": 978,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "8bb695ea784c1100c44f83c9094d594a25be3841e7b82038511fe2026a9c159e"
+      },
+      {
+        "tag": "fold3",
+        "train_rows": 978,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "717131d50097e79461177e2344ae6d99484124b20e87d7e4bd1fdc99b8e1de71"
+      },
+      {
+        "tag": "fold4",
+        "train_rows": 977,
+        "encoded_rows": 1222,
+        "train_ids_sha256": "9a1729f4ae5c85e5f2086a9efb2a069370e23b5e039ce2d6c92f82cbc67b76c6"
+      },
+      {
+        "tag": "full",
+        "train_rows": 1222,
+        "encoded_rows": 1525,
+        "train_ids_sha256": "c45379a4d25b5668532a1b3fa0f5291759d42116a2466a886c33ef518b984eec"
+      }
+    ],
+    "seconds": 25.077122800052166,
+    "embedding": "scratch-trained FastText skip-gram mean pooling, 100 dimensions"
+  }
+}

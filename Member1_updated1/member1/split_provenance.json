@@ -1,0 +1,13 @@
+{
+  "method": "Recovered development id/fold assignments from Member-4 OOF; complement is holdout. No random repartitioning.",
+  "split_sha256": "476bbb6f1516ca51117e7a6e2df06c9a411bbc24b6f2563a5da52cca882d48e0",
+  "matches_member4_split_hash": true,
+  "clean_matches_member4_after_windows_csv_serialization": true,
+  "development_rows": 1222,
+  "test_rows": 303,
+  "sources": {
+    "data/clean_v2/clean_v2.csv": "82800e84083982d2f4735c61281f19d78329df419bf429acf7e58f7a8dda126d",
+    "Member4_file/selected_oof_predictions.csv": "5d3b39a712443af0834db1f170ebb9efff7d9952b04efa36ed2839b8d5d9b14e",
+    "Member4_file/summary.json": "0aaabc7e06d3653cb54e5eae128f24a39a2e7d0489321325088d136125858867"
+  }
+}

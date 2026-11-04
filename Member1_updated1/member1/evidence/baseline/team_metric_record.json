@@ -1,0 +1,20 @@
+{
+  "run_id": "baseline__tfidf__20261104-222636-b258",
+  "timestamp": "2026-11-04T22:26:37",
+  "model": "baseline",
+  "embedding": "tfidf",
+  "split": "cv",
+  "data_version": "clean_v2",
+  "split_version": "folds_v1",
+  "seed": 42,
+  "accuracy": 0.5924713584288053,
+  "macro_precision": 0.6053494906608006,
+  "macro_recall": 0.5767377066207892,
+  "macro_f1": 0.5819958867503482,
+  "f1_neutral": 0.5562913907284768,
+  "f1_positive": 0.639212175470009,
+  "f1_negative": 0.5504840940525588,
+  "params": "{\"class_weight\": null, \"lr_C\": 1.0, \"lr_max_iter\": 2000, \"tfidf_min_df\": 1, \"tfidf_ngram_range\": [1, 1]}",
+  "train_seconds": 0.41716195899425657,
+  "notes": "Team splits; pooled OOF; fit time sums five training folds; test predictions deferred"
+}

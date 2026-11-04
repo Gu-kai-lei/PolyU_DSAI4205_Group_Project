@@ -1,0 +1,13 @@
+test_group_and_id_corruption_rejected (member1.test_baseline.BaselineTests.test_group_and_id_corruption_rejected) ... ok
+test_missing_prerequisites_do_not_write (member1.test_baseline.BaselineTests.test_missing_prerequisites_do_not_write) ... ok
+test_team_integration_in_temporary_directory (member1.test_baseline.BaselineTests.test_team_integration_in_temporary_directory) ... ok
+test_validation_does_not_expand_vocabulary (member1.test_baseline.BaselineTests.test_validation_does_not_expand_vocabulary) ... ok
+test_changed_fold_rejected (member1.test_split_recovery.SplitRecoveryTests.test_changed_fold_rejected) ... ok
+test_changed_text_rejected (member1.test_split_recovery.SplitRecoveryTests.test_changed_text_rejected) ... ok
+test_exact_member4_hash (member1.test_split_recovery.SplitRecoveryTests.test_exact_member4_hash) ... ok
+test_missing_oof_rejected (member1.test_split_recovery.SplitRecoveryTests.test_missing_oof_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.667s
+
+OK
