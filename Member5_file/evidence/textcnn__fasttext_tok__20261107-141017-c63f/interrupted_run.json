@@ -1,0 +1,6 @@
+{
+  "status": "interrupted during plotting after metrics and predictions were saved",
+  "reason": "macOS GUI backend abort in headless execution; reproduced with a minimal plot",
+  "superseded_by": "textcnn__fasttext_tok__20261107-141250-6a8e",
+  "metrics_reproduced_exactly": true
+}

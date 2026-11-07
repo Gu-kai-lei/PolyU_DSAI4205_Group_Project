@@ -1,0 +1,28 @@
+{
+  "source": {
+    "data_version": "clean_v2",
+    "split_version": "folds_v1",
+    "seed": 42,
+    "data_sha256": "82800e84083982d2f4735c61281f19d78329df419bf429acf7e58f7a8dda126d",
+    "split_sha256": "c84f99358e946cf71da3e7f3902a5f47213d0768e84d618cc39557ddd48294e2"
+  },
+  "verified_runs": [
+    {
+      "run_id": "textcnn__fasttext_tok__20261107-141250-6a8e",
+      "macro_f1_recomputed": 0.5361240715283498,
+      "oof_rows": 1222,
+      "test_rows": 303,
+      "safetensors_reload_predictions_match": true,
+      "all_split_and_probability_checks_passed": true
+    },
+    {
+      "run_id": "textcnn__transformer_tokens__20261107-141902-c914",
+      "macro_f1_recomputed": 0.5795760238197237,
+      "oof_rows": 1222,
+      "test_rows": 303,
+      "safetensors_reload_predictions_match": true,
+      "all_split_and_probability_checks_passed": true
+    }
+  ],
+  "test_labels_scored": false
+}

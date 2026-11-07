@@ -1,0 +1,19 @@
+{
+  "python": "3.12.8",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "execution_device": "cpu",
+  "torch_threads_used": 2,
+  "cuda_available": false,
+  "packages": {
+    "torch": "2.11.0",
+    "transformers": "4.57.6",
+    "sentence-transformers": "5.7.0",
+    "numpy": "1.26.4",
+    "pandas": "2.2.3",
+    "scipy": "1.13.1",
+    "scikit-learn": "1.5.2",
+    "gensim": "4.4.0",
+    "matplotlib": "3.9.2"
+  },
+  "live_colab_session_verified": false
+}

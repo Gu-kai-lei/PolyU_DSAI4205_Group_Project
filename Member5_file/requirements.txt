@@ -1,0 +1,13 @@
+torch==2.11.0
+transformers==4.57.6
+sentence-transformers==5.7.0
+numpy==1.26.4
+scipy==1.13.1
+pandas==2.2.3
+scikit-learn==1.5.2
+matplotlib==3.9.2
+gensim==4.4.0
+nbformat
+nbclient
+ipykernel
+pytest

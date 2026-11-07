@@ -1,0 +1,48 @@
+{
+  "data_version": "clean_v2",
+  "split_version": "folds_v1",
+  "seed": 42,
+  "data_sha256": "82800e84083982d2f4735c61281f19d78329df419bf429acf7e58f7a8dda126d",
+  "split_sha256": "c84f99358e946cf71da3e7f3902a5f47213d0768e84d618cc39557ddd48294e2",
+  "max_len": 31,
+  "length_source": "development texts only",
+  "audits": [
+    {
+      "version": "fold0",
+      "trained on": 980,
+      "vocabulary": 1386,
+      "tweets encoded": 1222
+    },
+    {
+      "version": "fold1",
+      "trained on": 975,
+      "vocabulary": 1420,
+      "tweets encoded": 1222
+    },
+    {
+      "version": "fold2",
+      "trained on": 978,
+      "vocabulary": 1399,
+      "tweets encoded": 1222
+    },
+    {
+      "version": "fold3",
+      "trained on": 978,
+      "vocabulary": 1395,
+      "tweets encoded": 1222
+    },
+    {
+      "version": "fold4",
+      "trained on": 977,
+      "vocabulary": 1415,
+      "tweets encoded": 1222
+    },
+    {
+      "version": "full",
+      "trained on": 1222,
+      "vocabulary": 1645,
+      "tweets encoded": 1525
+    }
+  ],
+  "seconds": 36.318711624946445
+}
