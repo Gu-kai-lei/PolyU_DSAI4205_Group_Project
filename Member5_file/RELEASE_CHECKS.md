@@ -9,3 +9,5 @@
 - Historical full source/weight verification remains explicitly historical. No new formal tuning was run during packaging; publication changes are recorded in PUBLICATION.json.
 - Fresh independent review found the historical MVP overwrite and misleading reproduction-link issues; one fixes pass added regression checks and clarified notebook displays.
 - Full repository collection still has three existing Member1 import errors (Member1_file/member1/test_baseline.py, Member1_updated1/member1/test_baseline.py, Member1_updated1/member1/test_split_recovery.py). The full repository suite is not claimed green; shared code is unchanged.
+
+Publication: source commit 5718109e03eea17f98da6b5ad0612a34cf80e090 was pushed non-force to main and read back through GitHub. This receipt adds documentation only.

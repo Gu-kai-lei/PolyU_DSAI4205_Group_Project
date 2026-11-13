@@ -28,4 +28,4 @@
 ### Task2: Verify and publish
 - [x] Recompute committed metrics, execute both entry notebooks using nbclient and run all scoped M5 tests including local training checks.
 - [x] Fresh reviewer, one fixes pass, green checks and concrete release commit.
-- [ ] Fetch main again; push non-force if unchanged, reconcile/revalidate if changed; verify remote SHA/file after push.
+- [x] Fetch main again; push non-force if unchanged, reconcile/revalidate if changed; verify remote SHA/file after push.
