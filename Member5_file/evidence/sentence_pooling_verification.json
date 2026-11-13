@@ -1,0 +1,6 @@
+{
+  "reference": "SentenceTransformer.encode with max_seq_length=82, normalized",
+  "rows": 6,
+  "max_absolute_difference": 1.0058283805847168e-07,
+  "passed": true
+}

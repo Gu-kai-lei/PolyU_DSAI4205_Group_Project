@@ -1,0 +1,309 @@
+{
+  "entrants": [
+    "C0",
+    "C3",
+    "C5"
+  ],
+  "winner": {
+    "candidate": "C5",
+    "score": 0.6040064084483594,
+    "epochs": 9,
+    "parameters": 689155
+  },
+  "control": {
+    "candidate": "C0",
+    "score": 0.5982883172775947,
+    "epochs": 4,
+    "parameters": 1076803
+  },
+  "rows": [
+    {
+      "candidate": "C0",
+      "inner_fold": 0,
+      "seed": 42,
+      "score": 0.6160000168027691,
+      "best_epoch": 3,
+      "parameters": 1076803
+    },
+    {
+      "candidate": "C0",
+      "inner_fold": 1,
+      "seed": 42,
+      "score": 0.5983973450491308,
+      "best_epoch": 8,
+      "parameters": 1076803
+    },
+    {
+      "candidate": "C0",
+      "inner_fold": 2,
+      "seed": 42,
+      "score": 0.5910294101982339,
+      "best_epoch": 10,
+      "parameters": 1076803
+    },
+    {
+      "candidate": "C1",
+      "inner_fold": 0,
+      "seed": 42,
+      "score": 0.6326996875487145,
+      "best_epoch": 7,
+      "parameters": 344579
+    },
+    {
+      "candidate": "C1",
+      "inner_fold": 1,
+      "seed": 42,
+      "score": 0.6037090835113417,
+      "best_epoch": 3,
+      "parameters": 344579
+    },
+    {
+      "candidate": "C1",
+      "inner_fold": 2,
+      "seed": 42,
+      "score": 0.5631759630512844,
+      "best_epoch": 4,
+      "parameters": 344579
+    },
+    {
+      "candidate": "C2",
+      "inner_fold": 0,
+      "seed": 42,
+      "score": 0.6281013734042364,
+      "best_epoch": 3,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C2",
+      "inner_fold": 1,
+      "seed": 42,
+      "score": 0.6049402181053738,
+      "best_epoch": 5,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C2",
+      "inner_fold": 2,
+      "seed": 42,
+      "score": 0.5605124659660005,
+      "best_epoch": 2,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C3",
+      "inner_fold": 0,
+      "seed": 42,
+      "score": 0.6415202956857358,
+      "best_epoch": 10,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C3",
+      "inner_fold": 1,
+      "seed": 42,
+      "score": 0.6061171667253408,
+      "best_epoch": 7,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C3",
+      "inner_fold": 2,
+      "seed": 42,
+      "score": 0.5584758920642936,
+      "best_epoch": 2,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C4",
+      "inner_fold": 0,
+      "seed": 42,
+      "score": 0.6285317232125743,
+      "best_epoch": 10,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C4",
+      "inner_fold": 1,
+      "seed": 42,
+      "score": 0.606922057969876,
+      "best_epoch": 5,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C4",
+      "inner_fold": 2,
+      "seed": 42,
+      "score": 0.5635209235209235,
+      "best_epoch": 4,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C5",
+      "inner_fold": 0,
+      "seed": 42,
+      "score": 0.6389230387119387,
+      "best_epoch": 10,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C5",
+      "inner_fold": 1,
+      "seed": 42,
+      "score": 0.6073199321191763,
+      "best_epoch": 8,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C5",
+      "inner_fold": 2,
+      "seed": 42,
+      "score": 0.5738368956462386,
+      "best_epoch": 8,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C0",
+      "inner_fold": 0,
+      "seed": 17,
+      "score": 0.621005260489701,
+      "best_epoch": 3,
+      "parameters": 1076803
+    },
+    {
+      "candidate": "C0",
+      "inner_fold": 0,
+      "seed": 2026,
+      "score": 0.6305219660644142,
+      "best_epoch": 5,
+      "parameters": 1076803
+    },
+    {
+      "candidate": "C0",
+      "inner_fold": 1,
+      "seed": 17,
+      "score": 0.600662330884916,
+      "best_epoch": 5,
+      "parameters": 1076803
+    },
+    {
+      "candidate": "C0",
+      "inner_fold": 1,
+      "seed": 2026,
+      "score": 0.5889241812881051,
+      "best_epoch": 3,
+      "parameters": 1076803
+    },
+    {
+      "candidate": "C0",
+      "inner_fold": 2,
+      "seed": 17,
+      "score": 0.5582217310846248,
+      "best_epoch": 3,
+      "parameters": 1076803
+    },
+    {
+      "candidate": "C0",
+      "inner_fold": 2,
+      "seed": 2026,
+      "score": 0.5798326136364577,
+      "best_epoch": 4,
+      "parameters": 1076803
+    },
+    {
+      "candidate": "C3",
+      "inner_fold": 0,
+      "seed": 17,
+      "score": 0.6307220526005678,
+      "best_epoch": 9,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C3",
+      "inner_fold": 0,
+      "seed": 2026,
+      "score": 0.6280217221336405,
+      "best_epoch": 12,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C3",
+      "inner_fold": 1,
+      "seed": 17,
+      "score": 0.6097462245311851,
+      "best_epoch": 8,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C3",
+      "inner_fold": 1,
+      "seed": 2026,
+      "score": 0.5957755743201605,
+      "best_epoch": 8,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C3",
+      "inner_fold": 2,
+      "seed": 17,
+      "score": 0.5725718336214437,
+      "best_epoch": 12,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C3",
+      "inner_fold": 2,
+      "seed": 2026,
+      "score": 0.5748170309145918,
+      "best_epoch": 4,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C5",
+      "inner_fold": 0,
+      "seed": 17,
+      "score": 0.6324944027907945,
+      "best_epoch": 9,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C5",
+      "inner_fold": 0,
+      "seed": 2026,
+      "score": 0.6351251730155864,
+      "best_epoch": 9,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C5",
+      "inner_fold": 1,
+      "seed": 17,
+      "score": 0.6102303259327176,
+      "best_epoch": 8,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C5",
+      "inner_fold": 1,
+      "seed": 2026,
+      "score": 0.5967354214413039,
+      "best_epoch": 11,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C5",
+      "inner_fold": 2,
+      "seed": 17,
+      "score": 0.5745888794219453,
+      "best_epoch": 12,
+      "parameters": 689155
+    },
+    {
+      "candidate": "C5",
+      "inner_fold": 2,
+      "seed": 2026,
+      "score": 0.5668036069555331,
+      "best_epoch": 6,
+      "parameters": 689155
+    }
+  ]
+}

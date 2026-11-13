@@ -1,0 +1,30 @@
+{
+  "observed_active_wall_seconds": 902.1853765831329,
+  "budget_seconds": 7200.0,
+  "formal_attempts": 235,
+  "completed_formal_fits": 235,
+  "failed_or_interrupted_attempts": 0,
+  "formal_attempt_seconds": 754.2636978598312,
+  "peak_cuda_bytes": 0,
+  "maximum_observed_device_allocated_bytes": 49561344,
+  "device_memory_note": "MPS allocator sampled at epoch end; not an exact peak and excludes other applications",
+  "parameters_by_candidate": {
+    "C0": 1076803,
+    "C1": 344579,
+    "C2": 689155,
+    "C3": 689155,
+    "C4": 689155,
+    "C5": 689155
+  },
+  "hardware": {
+    "backend": "mps",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "threads": 2,
+    "gpu": "Apple M5 Pro",
+    "capability": null,
+    "cudnn": null
+  },
+  "currency_cost": "Not measured: local electricity/energy usage",
+  "restore_limitation": "Work lost after the latest durable checkpoint is not observable from that archive"
+}

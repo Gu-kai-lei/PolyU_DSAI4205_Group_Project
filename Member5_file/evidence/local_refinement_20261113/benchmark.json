@@ -1,0 +1,13 @@
+{
+  "synthetic_only": true,
+  "warmup_epochs": 1,
+  "repeats": 3,
+  "measured_epochs_per_repeat": 3,
+  "median_seconds_per_epoch": 0.5087708057835698,
+  "range_seconds_per_epoch": [
+    0.49988554138690233,
+    0.5565427090041339
+  ],
+  "conservative_max247_fits20_epochs_seconds": 2513.327780570835,
+  "candidates_changed_by_benchmark": false
+}

@@ -1,0 +1,16 @@
+{
+  "model_predictions_and_scores_changed": false,
+  "historical_training_run": "m5_local_20261113_mps_v2_final",
+  "historical_source_commit_local": "0d3e3e5",
+  "historical_full_weight_verification": "independent_verification.json",
+  "current_release_code_retrained": false,
+  "publication_changes": [
+    "Cloud-only execution paths removed from release code",
+    "Personal interpreter/run directory paths omitted",
+    "Full local weight index and old no-push delivery metadata excluded",
+    "MVP output routing isolated from historical evidence and published results",
+    "Missing-provenance existing embedding targets rejected before encoding"
+  ],
+  "recompute_published_evidence": "python Member5_file/release.py",
+  "full_archive_note": "Full source-snapshot/weights/log archive retained locally by YU Guanlin; current source gets a new signature for future reproduction"
+}

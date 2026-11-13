@@ -1,0 +1,25 @@
+{
+  "selected_mean": 0.6059460878245292,
+  "selected_sample_sd": 0.00798523453238819,
+  "control_mean": 0.6154686496814397,
+  "baseline_macro_f1": 0.5819958867503482,
+  "mean_delta": -0.009522561856910472,
+  "positive_seeds": 0,
+  "class_mean_deltas": [
+    -0.014652287738404879,
+    0.0117759535391746,
+    -0.025691351371501248
+  ],
+  "practical_target_met": false,
+  "statistical_advantage_confirmed": false,
+  "limitations": [
+    "Conditional OOF bootstrap does not include model-selection/training uncertainty",
+    "Historical outer OOF was inspected before this preregistered study",
+    "Team test set was previously inspected; no fresh independent test claim",
+    "Baseline not retuned in this study",
+    "No independent human ground-truth labels"
+  ],
+  "evidence_scope": "additional exploratory development evidence; previously inspected outer OOF",
+  "evaluated_object": "adaptive two-stage selection pipeline, not independent fixed final config",
+  "human_ground_truth_verified": false
+}

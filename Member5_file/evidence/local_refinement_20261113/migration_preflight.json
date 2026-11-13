@@ -1,0 +1,12 @@
+{
+  "source_run": "m5_local_20261113_mps_v2",
+  "source_protocol_sha256": "cc27e22b6595cf7a65b7146ee6bc7d77b74267cf6e460248b01bb961205a2be8",
+  "source_code_commit": "8ed6c0c plus preflight local migration",
+  "reason": "Fresh signed run after independent launcher review fixes; no cross-source fit reuse",
+  "budgets_carried": {
+    "budget.json": 34.132555957883596,
+    "diagnostic_budget.json": 19.989197874907404,
+    "memory_budget.json": 1.317886458709836
+  },
+  "preflight_retained_locally": true
+}

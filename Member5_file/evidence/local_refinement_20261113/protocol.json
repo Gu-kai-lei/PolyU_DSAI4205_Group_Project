@@ -1,0 +1,133 @@
+{
+  "schema_version": 2,
+  "run_id": "m5_local_20261113_mps_v2_final",
+  "candidates": {
+    "C0": {
+      "filters": 100,
+      "lr": 0.001,
+      "dropout": 0.5,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C1": {
+      "filters": 32,
+      "lr": 0.001,
+      "dropout": 0.5,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C2": {
+      "filters": 64,
+      "lr": 0.001,
+      "dropout": 0.5,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C3": {
+      "filters": 64,
+      "lr": 0.0003,
+      "dropout": 0.5,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C4": {
+      "filters": 64,
+      "lr": 0.0003,
+      "dropout": 0.3,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C5": {
+      "filters": 64,
+      "lr": 0.0003,
+      "dropout": 0.6,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    }
+  },
+  "seeds": [
+    42,
+    17,
+    2026
+  ],
+  "selection": "three-fold seed42 top2 UNION C0, then two more seeds",
+  "outer_folds": 5,
+  "epoch_rule": "each candidate own median nine best epochs",
+  "batch_size": 32,
+  "clip_norm": 1.0,
+  "budget_seconds": 7200.0,
+  "diagnostic_seconds": 900,
+  "device": "mps",
+  "input": {
+    "encoder": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+    "revision": "4328cf26390c98c5e3c738b4460a05b95f4911f5",
+    "max_len": 82,
+    "dim": 768,
+    "files": {
+      "sbert_multi.npy": "7a583ff05cae2bb2e50eda821fea4580fbd8e84ea34c98f9654763da62497c9c",
+      "sbert_multi_ids.npy": "7be567b2f824a931bd784ce12af3906905ff8439f9cafdb2d410672f4ce09c5a",
+      "tokens_multi.npy": "13f8a548e75aa6404ce49e73510245f753ef4df5f71e8734f5b4d134126c28ab",
+      "tokens_multi_ids.npy": "7be567b2f824a931bd784ce12af3906905ff8439f9cafdb2d410672f4ce09c5a",
+      "tokens_mask.npy": "94ebbbf573de58be4579ef1d0e23bf537b0fe9d50c78f3ea77e0272cf60a627c",
+      "tokens_mask_ids.npy": "7be567b2f824a931bd784ce12af3906905ff8439f9cafdb2d410672f4ce09c5a"
+    }
+  },
+  "data_sha256": "82800e84083982d2f4735c61281f19d78329df419bf429acf7e58f7a8dda126d",
+  "split_sha256": "c84f99358e946cf71da3e7f3902a5f47213d0768e84d618cc39557ddd48294e2",
+  "baseline_sha256": "f0d108e9c855f64a5b96037e2271d4da1a3115a95e027200179791d76f553ec5",
+  "source_hashes": {
+    "Member5_file/diagnose_refine.py": "e0d0ef503a4985b8bf0408a2d44fe2d073c6508736e5de279d7a942ccf7c96b1",
+    "Member5_file/v2_runtime.py": "63ba8281f6eb8f5cae6fb021fe5516c17e0468f726b80f18f7173a7dfba50c80",
+    "Member5_file/v2_training.py": "0c00f9e6ccd93f9b9cdf2493fb504671bfaf69a0f70737c9a74182c0a28c8242",
+    "Member5_file/v2_verification.py": "781113620042b98fdbfd7f1456f8d395e09cdbee4280ccf0e6b55df6e572d662",
+    "Member5_file/v2_colab.py": "b206607bcba4d035dbd364e945a8cffbe74f6f203e39dbf665521664189dc9b7",
+    "Member5_file/run_local.py": "f19650518faefe95d923d7a42afbf83ac68f0de3ecd61b91bacdf98932198619",
+    "Member5_file/run_local.sh": "dacb6a54f8d54c50ff2b9d0374e208cb0721d10d7eed5136c50464f317f492e3",
+    "Member5_file/refine.py": "69420d0bdbf9a2b076973e27ae7df615dfa8176d579091b4a932fb206baa3408",
+    "Member5_file/mvp.py": "a24dc0482fbaae5eb2670609b62b45fc7f4c33aba55274d261a8f94481e9674e",
+    "src/training.py": "38d22f977d4b1d063b248136920563273b59d84fb33ba9053ab1ebb5e9171c0f",
+    "src/data.py": "916d9e4d593aad56a16c0380216074b62769d0d406adedc720ef17bc67017b96",
+    "src/config.py": "7e3855cc9f90aa25c3711a60547fe4ea3ed1188195ea4eca370bcdb6fd20f113",
+    "src/cache.py": "e64a87aab31436cd2afdf34378ded0fd0cf0a0be4d1605470df735e130adb039",
+    "src/evaluate.py": "9987892866379835bd8f19a9d61c78602c22b8b368f9c0b4510574ed76ba5a31",
+    "src/fasttext_emb.py": "64aa662ba53bd234e6aac0e6312cbde8a38d6644b3e2b2e6dfd877e52593bea0"
+  },
+  "versions": {
+    "torch": "2.11.0",
+    "numpy": "1.26.4",
+    "scipy": "1.13.1",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.5.2",
+    "matplotlib": "3.9.2",
+    "safetensors": "0.8.0"
+  },
+  "python": "3.12.8",
+  "cuda": null,
+  "hardware": {
+    "backend": "mps",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "threads": 2,
+    "gpu": "Apple M5 Pro",
+    "capability": null,
+    "cudnn": null
+  },
+  "evidence_scope": "additional exploratory development evidence; previously inspected outer OOF",
+  "limitations": [
+    "historical full-development unlabeled length statistic retained",
+    "no independent human labels",
+    "reserved set previously inspected by team"
+  ]
+}
