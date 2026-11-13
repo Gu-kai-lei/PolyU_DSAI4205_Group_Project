@@ -1,0 +1,98 @@
+{
+  "raw_rows": 1698,
+  "clean_rows": 1525,
+  "development_rows": 1222,
+  "reserved_rows": 303,
+  "data_sha256": "82800e84083982d2f4735c61281f19d78329df419bf429acf7e58f7a8dda126d",
+  "split_sha256": "c84f99358e946cf71da3e7f3902a5f47213d0768e84d618cc39557ddd48294e2",
+  "historical_reconciled": [
+    {
+      "run_id": "textcnn__fasttext_tok__20261107-141250-6a8e",
+      "accuracy": 0.5343698854337152,
+      "macro_precision": 0.5408006232015389,
+      "macro_recall": 0.5341994375515987,
+      "macro_f1": 0.5361240715283498,
+      "f1_0": 0.5604900459418071,
+      "f1_1": 0.5351239669421488,
+      "f1_2": 0.5127582017010935
+    },
+    {
+      "run_id": "textcnn__transformer_tokens__20261107-141902-c914",
+      "accuracy": 0.5834697217675942,
+      "macro_precision": 0.5825511409726506,
+      "macro_recall": 0.5780957947058458,
+      "macro_f1": 0.5795760238197237,
+      "f1_0": 0.5660377358490566,
+      "f1_1": 0.6120434353405726,
+      "f1_2": 0.5606469002695418
+    }
+  ],
+  "baseline": {
+    "accuracy": 0.5924713584288053,
+    "macro_precision": 0.6053494906608006,
+    "macro_recall": 0.5767377066207892,
+    "macro_f1": 0.5819958867503482,
+    "f1_0": 0.5562913907284768,
+    "f1_1": 0.639212175470009,
+    "f1_2": 0.5504840940525588,
+    "classification_report": {
+      "0": {
+        "precision": 0.65625,
+        "recall": 0.4827586206896552,
+        "f1-score": 0.5562913907284768,
+        "support": 348.0
+      },
+      "1": {
+        "precision": 0.5657686212361331,
+        "recall": 0.7345679012345679,
+        "f1-score": 0.639212175470009,
+        "support": 486.0
+      },
+      "2": {
+        "precision": 0.5940298507462687,
+        "recall": 0.5128865979381443,
+        "f1-score": 0.5504840940525588,
+        "support": 388.0
+      },
+      "accuracy": 0.5924713584288053,
+      "macro avg": {
+        "precision": 0.6053494906608006,
+        "recall": 0.5767377066207892,
+        "f1-score": 0.5819958867503482,
+        "support": 1222.0
+      },
+      "weighted avg": {
+        "precision": 0.6005091096647406,
+        "recall": 0.5924713584288053,
+        "f1-score": 0.5874258181213805,
+        "support": 1222.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        168,
+        129,
+        51
+      ],
+      [
+        44,
+        357,
+        85
+      ],
+      [
+        44,
+        145,
+        199
+      ]
+    ]
+  },
+  "baseline_fit_inference_seconds": 3.762936980000063,
+  "test_labels_scored": false,
+  "test_history": "Previously evaluated by other members; not a pristine team holdout",
+  "manual_label_review": "Not independently human relabelled; diagnostic sample only",
+  "limitations": [
+    "historical outer OOF already inspected",
+    "possible lexicon-generated labels",
+    "no evidence of financial-return prediction"
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "candidates": {
+    "C0": {
+      "filters": 100,
+      "lr": 0.001,
+      "dropout": 0.5,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C1": {
+      "filters": 32,
+      "lr": 0.001,
+      "dropout": 0.5,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C2": {
+      "filters": 64,
+      "lr": 0.001,
+      "dropout": 0.5,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C3": {
+      "filters": 64,
+      "lr": 0.0003,
+      "dropout": 0.5,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C4": {
+      "filters": 64,
+      "lr": 0.0003,
+      "dropout": 0.3,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C5": {
+      "filters": 64,
+      "lr": 0.0003,
+      "dropout": 0.6,
+      "weight_decay": 0.01,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C6": {
+      "filters": 64,
+      "lr": 0.0003,
+      "dropout": 0.5,
+      "weight_decay": 0.001,
+      "class_weight": false,
+      "max_epochs": 20,
+      "patience": 4
+    },
+    "C7": {
+      "filters": 64,
+      "lr": 0.0003,
+      "dropout": 0.5,
+      "weight_decay": 0.01,
+      "class_weight": true,
+      "max_epochs": 20,
+      "patience": 4
+    }
+  },
+  "seeds": [
+    42,
+    17,
+    2026
+  ],
+  "outer_folds": 5,
+  "inner_folds": 3,
+  "device": "cuda",
+  "budget_seconds": 14400.0,
+  "num_threads": 2,
+  "data_sha256": "82800e84083982d2f4735c61281f19d78329df419bf429acf7e58f7a8dda126d",
+  "split_sha256": "c84f99358e946cf71da3e7f3902a5f47213d0768e84d618cc39557ddd48294e2",
+  "encoder_revision": "4328cf26390c98c5e3c738b4460a05b95f4911f5",
+  "max_len": 82,
+  "code_sha256": "69420d0bdbf9a2b076973e27ae7df615dfa8176d579091b4a932fb206baa3408",
+  "training_sha256": "38d22f977d4b1d063b248136920563273b59d84fb33ba9053ab1ebb5e9171c0f",
+  "model_sha256": "a24dc0482fbaae5eb2670609b62b45fc7f4c33aba55274d261a8f94481e9674e",
+  "versions": {
+    "torch": "2.14.1+cu130",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.5.2"
+  },
+  "python": "3.13.16"
+}

@@ -35,7 +35,8 @@ def _frame(path,dev):
 
 
 def verify_evidence(directory=None):
-    directory=Path(directory) if directory is not None else ROOT/'Member5_file/evidence/local_refinement_20261113'
+    from adopted_model import default_evidence_directory
+    directory=Path(directory) if directory is not None else default_evidence_directory()
     clean=load_clean().sort_values('id');splits=load_splits(clean=clean)
     joined=splits[['id','split','fold']].merge(clean,on='id',validate='one_to_one').sort_values('id')
     dev=joined.loc[joined.split=='train'].reset_index(drop=True);reserved=joined.loc[joined.split=='test']

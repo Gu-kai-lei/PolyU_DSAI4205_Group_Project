@@ -1,0 +1,17 @@
+{
+  "pilot_seconds": [
+    7.503519433999941,
+    38.985798682999985
+  ],
+  "full_projected_seconds": 18050.424790228994,
+  "reduced_projected_seconds": 9629.492274700997,
+  "candidate_ids": [
+    "C0",
+    "C1",
+    "C3",
+    "C7"
+  ],
+  "feasible": true,
+  "budget_selection_uses_scores": false,
+  "actual_device": "cuda"
+}
