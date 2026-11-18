@@ -2,6 +2,17 @@
 
 成员：GU Kailei　负责：kNN、错误分析、项目协调
 
+## 已交付：kNN 预测（给 1 号做 Stacking 和总对比）
+
+由 `notebooks/03_models/21_m2_knn.ipynb` 生成，对应 `results/m2_knn.csv` 中交叉验证分数最高的一次（SBERT 句向量，k=41，按距离加权，CV macro-F1 0.539；参数在同一套折上调，嵌套估计 0.522）。重跑 notebook 会生成新的 run_id 并覆盖这两个文件。
+
+| 文件 | 内容 |
+|---|---|
+| `predictions/knn_oof.csv` | 开发集 1,222 条的交叉验证预测：`id, group_id, fold, label, prediction, prob_0, prob_1, prob_2` |
+| `predictions/knn_test.csv` | 测试集 303 条的预测概率（不含标签，这里不评分）：`id, prediction, prob_0, prob_1, prob_2` |
+
+概率列的顺序是 0 Neutral、1 Positive、2 Negative。
+
 把你的交付文件**直接放进这个文件夹**即可，不用管它们最后放在仓库的哪个位置，也不用先改格式。最后由 2 号（GU Kailei）统一整理到仓库的对应位置，并规范格式。
 
 ## 可以放
