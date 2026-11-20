@@ -13,19 +13,6 @@
 - **商业洞察（给 3 号）**：通用情感词典会误读市场语言——指数名 *Nifty* 被当成褒义形容词，"指数大跌"的行情播报因此被标成 Positive；red/green、bull/bear 这类行话词典不认识；抄底式的乐观（*buy low*）被读成负面；还有反讽。直接用词典信号做投资者情绪面板，会在下跌行情里给出偏乐观的信号。
 - **对报告的影响（给 6 号）**：多数难例（87%）并不是 VADER 不一致的样本。一部分难例的标签和 VADER 一致，但和推文本意相反（见下表的 806、1160、1134），这类问题用 VADER 一致率检查不出来。所以我们的分数衡量的是"和这套标签一致的程度"，局限性里要写清楚。
 
-## Draft for report Section 4.3 Error analysis
+## 报告正文
 
-We compared the out-of-fold predictions of the four models that have them so far (TextCNN, the TF-IDF baseline, kNN on Sentence-BERT and the FastText MLP, rerun in the team environment). 152 of the 1,222 development tweets (12.4%) are misclassified by all four, while 1,070 (87.6%) are classified correctly by at least one model, so the models are complementary. The tweets that every model gets wrong are not random. First, the given label is more often questionable: VADER disagrees with the label for 13.2% of them, against 3.4% of the tweets that no model gets wrong, and the share rises steadily with the number of models that fail. Second, finance terms are over-represented: 39.5% of these tweets contain words such as *red*, *green*, *bearish*, *bullish*, *Fed* or *Nifty*, against 26.4% of the others (odds ratio 1.81, Fisher's exact test p = 0.001). Third, 9.9% contain a negation whose apostrophe was lost in the source file (*don__ panic*), against 3.6% of the others: a lexicon reads such a tweet without the negation, while our cleaned text restores it, so the models and the label disagree. Where restoring the negation changes VADER's label (14 tweets), the given label follows the damaged text in 13 cases, which is consistent with labels computed on the text as distributed. The most common error is predicting Positive for a Neutral or Negative tweet (64 of the 152, and 15 more where Positive ties with another label). Table 8 shows representative cases; several labels agree with VADER but not with what the tweet says, so a high score measures agreement with lexicon-style labels rather than with investors' reading of the market.
-
-**Table 8 Representative classification errors** (predicted = most common prediction of the four models; a tie lists both labels)
-
-| Case | True label | Predicted label | Explanation |
-|---|---|---|---|
-| 1574 | Negative | Positive | "Don__ panic. Look at the bigger picture." The file lost the apostrophe of *don't*, so a lexicon reads *panic* without the negation (VADER −0.51; +0.40 with *don't* restored). Our cleaning restores *don't*, and the models read the encouragement. |
-| 806 | Positive | Negative / Neutral (2 models each) | "Blood bath continues in Indian stock Market … NIFTY: 16,842 -308 … Market tanks over 2000 points." The only lexicon word is *Nifty* (+1.7), so the label is Positive although the tweet reports a fall; two models read it as Negative. |
-| 1160 | Positive | Neutral | "@user sad but true #bearmarket." VADER gives more weight to the clause after *but*, so *true* outweighs *sad* (+0.39) and the label is Positive. |
-| 1455 | Negative | Positive | "Time to purchase more stock during this #stockmarketcrash … I buy low and sell high." Buying-the-dip optimism. The lexicon scores *yes* (+1.7) and *low* (−1.1); its *but* rule halves the clause before *but* and boosts the one after it, so *low* dominates and the label is Negative (−0.20). |
-| 1134 | Positive | Neutral | "Yay #stockmarketcrash." Sarcasm: the label follows *yay* literally, and the tweet is too short for the models. |
-| 1649 | Negative | Neutral | "My anxiety level is the only thing up in this bear market." The label is plausible; the models miss a mild sentiment word (*anxiety*) among market words. A genuine model error. |
-
-Remedies for the final phase: treat index names such as *Nifty* as entities rather than sentiment words, mark tweets whose lexicon score flips when a lost negation is restored as uncertain labels, combine the complementary models by stacking, and relabel a small sample of the tweets that every model gets wrong to estimate how much of the remaining error is label noise.
+4.3 节的英文正文和表 8 已并入 [m2_final_sections.md](m2_final_sections.md)，以那份为准。
