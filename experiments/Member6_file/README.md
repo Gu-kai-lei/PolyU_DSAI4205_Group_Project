@@ -18,3 +18,9 @@
 ## 怎么上传
 
 在 GitHub 上打开这个文件夹，点 **Add file → Upload files**，把文件拖进去。提交说明用中文写清楚是什么，例如"6 号：BiLSTM notebook 第一版"。只放进自己的文件夹，不要改别人的文件夹。
+
+## Submission result
+
+Use [the corrected BiLSTM notebook](../../notebooks/03_models/25_m6_bilstm.ipynb) and [its OOF scores](../../results/m6_bilstm_grouped.csv). It selects the epoch inside each outer training partition, then refits before predicting the grouped validation fold. The previous 0.550 score is retained as experiment history. The corrected development Macro-F1 is 0.5211.
+
+The [current imbalance notebook](../../notebooks/04_analysis/32_imbalance.ipynb) scores only the development folds. Its regenerated FastText cache gives 0.5164, 0.5230 and 0.5354 without adjustment, with class weights and with oversampling, respectively. The [original ledger](../../results/imbalance.csv) also contains previously reported reserve scores.

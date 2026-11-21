@@ -41,8 +41,8 @@ author: "DataVinci · The Hong Kong Polytechnic University"
 | Method | OOF Macro-F1 |
 |---|---:|
 | Fixed / tuned TF-IDF baseline | 58.20% / 61.35% |
-| SBERT SVM / kNN | 59.85% / 53.95% |
-| XGBoost / FastText MLP | 57.89% / 53.45% |
+| SBERT SVM / kNN | 59.22% / 53.95% |
+| XGBoost / FastText MLP | 57.89% / 53.87% |
 | TextCNN / corrected BiLSTM | 61.79% / 52.11% |
 
 # Equal-weight fusion

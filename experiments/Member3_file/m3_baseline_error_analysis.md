@@ -21,4 +21,6 @@ The business implication is that XGBoost identifies more truly Neutral items, wh
 - [Comparison figure](m3_baseline_error_comparison.png)
 - [Class metrics](m3_baseline_class_comparison.csv)
 - [Paired counts and descriptive slices](m3_baseline_paired_errors.csv)
-- Reproduce from the repository root with `python Member3_file/m3_error_analysis.py --pred <path-to-combined-run-npz>` in the team environment. The Member 3 probability cache is available to the team through the existing handoff.
+- Reproduce from the repository root with `python experiments/Member3_file/m3_error_analysis.py --pred <path-to-combined-run-npz>` in the team environment. The Member 3 probability cache is available to the team through the existing handoff.
+
+The command defaults to the published XGBoost run and writes a new directory under `local_artifacts/m3_error_analysis/`. Give both `--run-id` and `--pred` to analyze a different run, with the corresponding CV row in `results/m3_xgboost.csv`. That produces a separate comparison.

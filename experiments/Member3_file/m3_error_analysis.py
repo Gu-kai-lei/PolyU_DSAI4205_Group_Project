@@ -2,6 +2,7 @@
 import argparse
 from pathlib import Path
 import re
+import tempfile
 
 import matplotlib
 matplotlib.use('Agg')
@@ -50,11 +51,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo', type=Path, default=Path.cwd())
     parser.add_argument('--pred', type=Path, help='Team NPZ containing the Member 3 OOF probabilities')
-    parser.add_argument('--output', type=Path, default=Path(__file__).resolve().parent)
+    parser.add_argument('--run-id', default=RUN, help='XGBoost run ID in the development score ledger')
+    parser.add_argument('--output', type=Path, help='Directory for the new analysis')
     args = parser.parse_args()
-    repo, out = args.repo, args.output
-    out.mkdir(parents=True, exist_ok=True)
-    pred_path = args.pred or repo / 'data' / 'preds' / (RUN + '.npz')
+    repo = args.repo.resolve()
+    pred_path = args.pred or repo / 'data' / 'preds' / (args.run_id + '.npz')
+    analysis_root = repo / 'local_artifacts' / 'm3_error_analysis'
+    if args.output is not None:
+        out = args.output.resolve()
+        if out == Path(__file__).resolve().parent:
+            parser.error('Use a separate output directory to preserve the published analysis')
+    if not pred_path.is_file():
+        parser.error(f'Missing predictions for run {args.run_id}: {pred_path}')
     clean = pd.read_csv(repo / 'data/clean_v2/clean_v2.csv')
     split = pd.read_csv(repo / 'splits/folds_v1.csv')
     frame = (split[split.split.eq('train')]
@@ -63,7 +71,11 @@ def main():
     assert len(frame) == 1222 and set(frame.fold) == set(range(5))
     assert frame.groupby('group_id').fold.nunique().max() == 1
     y = frame.label.to_numpy()
-    xgb_row = pd.read_csv(repo/'results/m3_xgboost.csv').set_index('run_id').loc[RUN]
+    ledger = pd.read_csv(repo/'results/m3_xgboost.csv')
+    matching = ledger.loc[ledger['run_id'].eq(args.run_id) & ledger['split'].eq('cv')]
+    if len(matching) != 1:
+        raise ValueError(f'Expected one development score row for {args.run_id}')
+    xgb_row = matching.iloc[0]
     baseline_row = pd.read_csv(repo/'results/baseline.csv').set_index('run_id').loc[BASELINE_RUN]
     base = np.full(len(frame), -1)
     for fold in range(5):
@@ -73,16 +85,27 @@ def main():
         model.fit(frame.loc[~valid, 'text_norm'], y[~valid])
         base[valid] = model.predict(frame.loc[valid, 'text_norm'])
     with np.load(pred_path, allow_pickle=False) as data:
-        assert data['run_id'].item() == RUN and data['classes'].tolist() == CLASSES
+        assert data['run_id'].item() == args.run_id and data['classes'].tolist() == CLASSES
         ids = data['oof_ids']
         assert len(ids) == len(set(ids)) == len(frame) and set(ids) == set(frame.id)
         indices = pd.Index(ids).get_indexer(frame.id)
-        candidate = data['oof_proba'][indices].argmax(axis=1)
+        probability = data['oof_proba'][indices]
+        if probability.shape != (len(frame), len(CLASSES)) or not np.isfinite(probability).all():
+            raise ValueError('Invalid OOF probability shape or values')
+        if (probability < 0).any() or (probability > 1).any() or not np.allclose(probability.sum(1), 1):
+            raise ValueError('Expected normalized class probabilities')
+        candidate = probability.argmax(axis=1)
     matrices = [compare(y, pred) for pred in [base, candidate]]
     f1 = np.array([macro_f1(m) for m in matrices])
     np.testing.assert_allclose(f1, [baseline_row.macro_f1, xgb_row.macro_f1], rtol=0, atol=1e-10)
     np.testing.assert_allclose([np.trace(m)/len(y) for m in matrices],
                                [baseline_row.accuracy, xgb_row.accuracy], rtol=0, atol=1e-10)
+    if args.output is None:
+        analysis_root.mkdir(parents=True, exist_ok=True)
+        out = Path(tempfile.mkdtemp(prefix='run-', dir=analysis_root))
+    else:
+        out.mkdir(parents=True, exist_ok=True)
+    print(f'Writing analysis of {args.run_id} to {out}')
     class_rows = []
     for name, pred in [('TF-IDF + LR', base), ('XGBoost', candidate)]:
         precision, recall, by_class, support = precision_recall_fscore_support(y, pred, labels=CLASSES)

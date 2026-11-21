@@ -69,7 +69,7 @@ Predict three supplied sentiment classes and compare six analytical model famili
 | Retained related-text groups | 1,513 |
 | Retained records flagged for lost characters | 397 |
 
-VADER on raw development text agrees with 92.06% of given labels. Agreement on clean and normalized variants is 91.49% and 85.11%. TextBlob on raw text agrees on 58.18%. This comparison cannot establish how the reference labels were generated. Neither lexicon contributes features, labels, or parameters to the reported comparison.
+VADER on raw development text agrees with 92.06% of given labels. Agreement on clean and normalized variants is 91.49% and 85.11%. TextBlob on raw text agrees on 58.18%. A separate check on all 1,666 readable raw tweets gives 93.0% VADER agreement. In 13 of 14 retained cases where restoring a broken negation changed VADER's prediction, the given label agrees with the damaged form. These findings support the hypothesis that the labels reflect VADER-style scoring of the distributed text. The original labeling procedure remains unknown. We use the lexicons only for diagnosis.
 
 ## 2.2 Class distribution
 
@@ -133,36 +133,38 @@ Use pooled Macro-F1 as the primary score and report per-class precision, recall 
 
 ## 4.1 Model comparison
 
-**Table 6. Development pooled OOF Macro-F1**
+**Table 6. Development results from the submission notebook**
 
-| Model or procedure | Macro-F1 | Evaluation note |
-|---|---:|---|
-| Fixed baseline | 58.20% | Reproduced on official folds |
-| Tuned baseline | 61.35% | Grouped nested selection |
-| SBERT SVM | 59.85% | Historical same-fold selection |
-| SBERT kNN | 53.95% | Historical same-fold selection. Separate nested estimate about 52.2% |
-| SBERT + descriptors XGBoost | 57.89% | Grouped nested selection |
-| FastText MLP | 53.45% | Archived team run. Same-fold configuration selection |
-| SBERT TextCNN | 61.79% | Seed-42 OOF of the nested selection procedure |
-| FastText BiLSTM | 52.11% | Corrected grouped inner early stopping |
-| Tuned baseline + TextCNN | 66.39% | Exploratory equal-weight probability average |
+| Model or procedure | Accuracy | Macro precision | Macro recall | Macro-F1 |
+|---|---:|---:|---:|---:|
+| Fixed baseline | 59.25% | 60.53% | 57.67% | 58.20% |
+| Tuned baseline | 61.46% | 61.50% | 61.22% | 61.35% |
+| SBERT SVM, nested rerun | 59.57% | 60.05% | 58.84% | 59.22% |
+| SBERT kNN | 54.66% | 55.50% | 54.55% | 53.95% |
+| SBERT + descriptors XGBoost, rerun | 58.35% | 58.46% | 57.76% | 57.89% |
+| FastText MLP, rerun | 53.85% | 55.54% | 53.36% | 53.87% |
+| SBERT TextCNN, archived seed 42 | 61.78% | 61.64% | 62.12% | 61.79% |
+| FastText BiLSTM, corrected | 52.13% | 51.98% | 52.50% | 52.11% |
+| Tuned baseline + TextCNN | 66.37% | 66.43% | 66.35% | 66.39% |
+
+The kNN and MLP rows follow same-fold configuration selection. The separate nested kNN estimate is about 52.2%. The XGBoost rerun uses regenerated SBERT vectors. The published XGBoost run also rounds to 57.89% Macro-F1, with 58.27% accuracy. Section 4.3 uses the published run for the paired error comparison.
 
 TextCNN exceeds the tuned baseline by 0.44 percentage points. The paired group-bootstrap 95% interval is −2.99 to +3.93 points, conditional on the fitted OOF predictions. The equal-weight average exceeds the tuned baseline by 5.04 points with a conditional interval of +2.34 to +7.71 points. Its advantage requires confirmation on independent data because the combination was proposed after development review. The fixed-C3 final checkpoint is distinct from TextCNN's adaptive OOF selection procedure.
 
-The corrected BiLSTM score is 2.53 points below a same-environment run that used its outer scoring labels for early stopping. In the FastText logistic-regression imbalance control, no weighting, class weights and oversampling yield 51.64%, 52.30% and 53.54%.
+The corrected BiLSTM score is 2.53 points below a same-environment run that used its outer scoring labels for early stopping. In the FastText logistic-regression imbalance rerun, no weighting, class weights and oversampling yield 51.64%, 52.30% and 53.54%. The original run recorded 50.92%, 52.74% and 52.68%. The ordering of the two adjustments changes across runs, so the result does not establish a reliable preference.
 
 ## 4.2 Final test performance
 
-A final independent ensemble result is unavailable. Earlier BiLSTM and imbalance studies already scored the 303 historical reserve records. The saved TextCNN checkpoint is also unavailable in the review environment. The per-class table below describes development predictions, with the reserve history disclosed separately.
+A final independent ensemble result is unavailable. Earlier BiLSTM and imbalance studies already scored the 303 historical reserve records. The current submission reports development results and leaves the reserve labels unscored. The per-class scores below come from pooled out-of-fold predictions.
 
 **Table 7. Equal-weight ensemble development results**
 
-| Class | OOF F1 | Support |
-|---|---:|---:|
-| Neutral | 68.02% | 348 |
-| Positive | 67.01% | 486 |
-| Negative | 64.12% | 388 |
-| Macro | 66.39% | 1,222 |
+| Class | OOF precision | OOF recall | OOF F1 | Support |
+|---|---:|---:|---:|---:|
+| Neutral | 68.82% | 67.24% | 68.02% | 348 |
+| Positive | 67.15% | 66.87% | 67.01% | 486 |
+| Negative | 63.32% | 64.95% | 64.12% | 388 |
+| Macro | 66.43% | 66.35% | 66.39% | 1,222 |
 
 ![Figure 3. Development confusion matrix for the exploratory ensemble](../figures/m2_review_vote_confusion.png){width=4.2in}
 
@@ -170,13 +172,21 @@ A final independent ensemble result is unavailable. Earlier BiLSTM and imbalance
 
 The fixed baseline, SBERT kNN, archived team MLP and TextCNN all miss 152 development records. VADER disagrees with the supplied label in 13.16% of these records and 7.20% of the other records. Selected finance words occur in 39.47% and 26.45%, respectively. The associations can reflect vocabulary, label ambiguity or market context.
 
-**Table 8. Selected development errors of the exploratory ensemble**
+Yang Qitian's paired comparison uses the fixed TF-IDF baseline and the published XGBoost run. XGBoost gained 39 correct Neutral predictions and lost 40 correct Positive and 11 correct Negative predictions. The paired group-bootstrap interval for the XGBoost minus baseline Macro-F1 was −3.56 to +3.08 percentage points. Those counts describe the published XGBoost predictions and the fixed baseline.
+
+**Table 8. Development tweets missed by all four models**
+
+The prediction column gives the most frequent predicted label among the fixed baseline, kNN, archived MLP and TextCNN. A tie lists both labels.
 
 | Row ID | Supplied | Predicted | Review note |
 |---|---|---|---|
-| 173 | Neutral | Negative | A short position and a market decline appear next to a denial of an imminent crash. |
-| 594 | Positive | Negative | The author rejects the description of the situation as a crash. |
-| 1316 | Negative | Neutral | A pun uses “bear” both as a market term and as a verb. |
+| 1574 | Negative | Positive | Restoring the lost apostrophe in “Don__ panic” changes how the negation is read. |
+| 806 | Positive | Negative or Neutral | The tweet reports an Indian market fall. VADER scores “Nifty” as a positive word. |
+| 1160 | Positive | Neutral | “Sad but true” contains opposing cues. |
+| 1455 | Negative | Positive | The author describes buying when prices are low. |
+| 1134 | Positive | Neutral | “Yay” may be sarcastic in a crash-related post. |
+| 1649 | Negative | Neutral | The tweet uses rising anxiety as a joke about the bear market. |
+
 
 # 5 Discussion and Conclusion
 
@@ -198,7 +208,7 @@ Sparse TF-IDF and logistic regression can run on a CPU and are inexpensive to ke
 
 ## 5.5 Limitations and future work
 
-The small, event-specific sample, corrupted input text, uncertain label source and prior reserve scoring limit interpretation. An independently annotated sample should include neutral descriptions, financial jargon, negation, and sarcasm. Freeze the probability combination and assess group-level uncertainty on that sample before deployment.
+The small, event-specific sample, corrupted input text, uncertain label source and prior reserve scoring limit interpretation. Because some reserve outcomes were seen during earlier experiments, the current development comparison cannot provide an unseen final evaluation. An independently annotated sample should include neutral descriptions, financial jargon, negation, and sarcasm. Freeze the probability combination and assess group-level uncertainty on that sample before deployment.
 
 ## 5.6 Conclusion
 
