@@ -1,0 +1,11 @@
+subset,n,both_correct,baseline_only,xgboost_only,both_wrong
+All,1222,511,213,201,297
+Neutral,348,128,40,79,101
+Positive,486,258,99,59,70
+Negative,388,125,74,63,126
+Length ≤80,280,117,60,52,51
+Length 81–140,359,143,62,63,91
+Length 141–220,326,128,51,51,96
+Length >220,257,123,40,35,59
+Finance term present,285,122,34,53,76
+Finance term absent,937,389,179,148,221
