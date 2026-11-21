@@ -40,6 +40,30 @@ python member1/baseline.py --mode team
 
 8 项测试通过，包括组泄漏、训练词表隔离、缺少依赖时拒绝运行、团队结果/缓存接口和划分恢复。两张图已目视检查。
 
-下一步是 SVM：仍需 Member 5 的 SBERT 句向量及 ID，和/或 Member 2 按正式折训练的 FastText 句向量及 ID。当前上传包没有这些向量。Baseline 调参、SVM、Stacking 和最终模型对比尚未完成。
+## SVM 结果
+
+所有结果使用团队同一套 `folds_v1`，pooled OOF 评分，不使用测试标签。全部参数组合见 `../results/m1_svm.csv`；每次运行的 OOF/test 概率在本地 `data/preds/`。
+
+| 嵌入 | 核 | 最佳参数 | OOF Macro-F1 | Accuracy |
+|---|---|---|---|---|
+| **SBERT（sbert_multi，5 号提供，冻结）** | **RBF** | **C=3，gamma=scale，class_weight=balanced** | **0.5985** | **0.6015** |
+| SBERT | Linear | C=0.001 | 0.5748 | 0.5786 |
+| FastText mean（按折从零训练） | RBF | C=1，gamma=scale | 0.5278 | 0.5344 |
+| FastText mean | Linear | C=0.1 | 0.5080 | 0.5254 |
+| Baseline（TF-IDF + LR，参考） | — | — | 0.5820 | 0.5925 |
+
+最佳 SVM run：`svm__sbert_multi__20261121-145728-06de`，各类 F1：Neutral 0.593 / Positive 0.624 / Negative 0.579；混淆矩阵见 `../figures/svm__sbert_multi__20261121-145728-06de_confusion.png`。
+
+注意：超参数在报告分数的同一套 5 折上选择（SBERT 共 41 组），0.5985 略偏乐观，未做嵌套交叉验证。SBERT 实验在 scikit-learn 1.9.1 / Python 3.13 上运行。
+
+使用 SBERT 前，把 5 号的 `sbert_multi.npy` 和 `sbert_multi_ids.npy` 放进 `data/emb/`（本地已放好，不上传 GitHub）。运行命令：
+
+```bash
+python member1/svm.py --embedding sbert_multi --kernel rbf --C 0.3 1 3 10 30 --gamma scale 0.0003 0.003 --class-weight none balanced
+python member1/svm.py --embedding sbert_multi --kernel linear --C 0.0001 0.0003 0.001 0.003 0.01 0.1 1 --class-weight none balanced
+python member1/svm.py --embedding fasttext_mean --kernel rbf --C 0.1 1 10 --gamma scale 0.01 0.1
+```
+
+Baseline 调参、Stacking 和最终模型对比仍未完成。
 
 历史临时运行输出和过时的 Notebook 草稿已清理。历史报告草稿可能仍写着 pending，以本交付记录为准。

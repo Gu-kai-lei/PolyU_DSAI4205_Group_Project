@@ -13,7 +13,9 @@
 - [验证证据](member1/evidence/baseline/)
 - [Methodology 历史草稿](docs/report_drafts/m1_baseline.md)：可能仍含 pending，以正式结果为准。
 
-正式 pooled OOF Accuracy 为 59.2471%，Macro-F1 为 58.1996%。测试集未参与训练或评分。SVM、调参及 Stacking 尚未完成。
+正式 pooled OOF Accuracy 为 59.2471%，Macro-F1 为 58.1996%。测试集未参与训练或评分。
+
+SVM（11/21）：SBERT + RBF SVM（C=3，gamma=scale，class_weight=balanced）pooled OOF Macro-F1 0.5985、Accuracy 0.6015，高于 baseline；详见 [member1/README.md](member1/README.md)。Baseline 调参和 Stacking 尚未完成。
 
 ## 下载后运行
 
