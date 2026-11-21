@@ -18,7 +18,7 @@ The character medians describe different text versions and different populations
 
 In the raw sample, 575 tweets are Neutral, 627 Positive and 496 Negative. After cleaning, the counts are 433 Neutral (28.4%), 607 Positive (39.8%) and 485 Negative (31.8%). Neutral falls from 33.9% to 28.4%, as many excluded non-English and wordless examples carried a Neutral label. The largest retained class is 1.40 times the smallest class. We report Macro-F1 and class-level recall alongside accuracy to make performance on each class visible.
 
-Insert Figure 1 from [`eda_01_class_distribution.png`](../../Member3_file/eda_01_class_distribution.png).
+Insert Figure 1 from [`eda_01_class_distribution.png`](../../experiments/Member3_file/eda_01_class_distribution.png).
 
 ## 2.3 Text characteristics
 
@@ -26,7 +26,7 @@ Neutral has a median of 86 characters and 13 whitespace tokens in `text_clean`. 
 
 The collection tags dominate document frequency. `#stockmarketcrash` appears in 920 retained tweets (60.3%) and `#bearmarket` in 599 (39.3%). For vocabulary, we rank normalized words by the share of tweets in each class containing them, counting each term once per tweet and excluding the collection terms and technical remnants for display. Common terms such as *market*, *stock* and *not* occur across classes, so a single word provides limited context. The tagged crypto, US equity and India subsets show similar Positive shares (40.3%, 37.8% and 40.3%). Forty-five tweets appear in more than one subset and 774 have none of the three market flags. Each share describes its own set of mentions.
 
-Insert Figure 2 from [`eda_02_text_lengths.png`](../../Member3_file/eda_02_text_lengths.png). Suggested appendix figures are [`hashtags`](../../Member3_file/eda_03_hashtags.png), [`vocabulary`](../../Member3_file/eda_04_vocabulary.png), [`market subsets`](../../Member3_file/eda_05_market_sentiment.png) and [`feature bins`](../../Member3_file/eda_06_feature_relationships.png). Underlying CSVs are in the same folder.
+Insert Figure 2 from [`eda_02_text_lengths.png`](../../experiments/Member3_file/eda_02_text_lengths.png). Suggested appendix figures are [`hashtags`](../../experiments/Member3_file/eda_03_hashtags.png), [`vocabulary`](../../experiments/Member3_file/eda_04_vocabulary.png), [`market subsets`](../../experiments/Member3_file/eda_05_market_sentiment.png) and [`feature bins`](../../experiments/Member3_file/eda_06_feature_relationships.png). Underlying CSVs are in the same folder.
 
 ## 3.4 XGBoost
 

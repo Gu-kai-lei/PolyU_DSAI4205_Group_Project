@@ -1,8 +1,7 @@
 """Build the standalone integration snapshot and member-4 entry notebooks.
 
-The single notebook embeds every Member-4 runtime module and clean_v2 data.
-It does not pretend missing team work is complete. --strict-final requires
-the remaining team notebooks to contain actual implementations first.
+The standalone Member 4 notebook embeds its runtime modules and clean_v2 data.
+Use --strict-final to execute the current consolidated workflow instead.
 """
 import argparse
 import ast
@@ -13,7 +12,7 @@ import json
 from pathlib import Path
 import nbformat as nbf
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 EXPECTED = ['00_eda', '10_emb_sbert', '12_emb_tokens', '20_m1_svm', '22_m3_xgboost',
             '24_m5_textcnn', '25_m6_bilstm', '30_ensemble', '32_imbalance']
 
@@ -46,8 +45,14 @@ class EnglishSource(ast.NodeTransformer):
 
 
 def build(strict_final=False):
-    status = readiness()
-    target = ROOT/'Member4_file'/'integration_status.json'
+    if strict_final:
+        from assemble_team import assemble
+
+        return assemble(execute=True)
+    status = json.loads((ROOT / "experiments/Member4_file" / "integration_status.json").read_text())["dependencies"]
+    output = ROOT / 'local_artifacts' / 'member4_archive'
+    output.mkdir(parents=True, exist_ok=True)
+    target = output / 'integration_status.json'
     target.write_text(json.dumps(dict(full_team_submission_ready=all(x['implemented'] for x in status),
                                       member4_ready=True, dependencies=status), indent=2), encoding='utf-8')
     missing = [x['stage'] for x in status if not x['implemented']]
@@ -105,8 +110,8 @@ print('Output directory:', ROOT)
 The first outer SGKF split fixes the holdout before modelling. For each MLP candidate and outer fold, a separate grouped inner split selects the epoch count, then the classifier is refitted on the complete outer training partition. Standardization is fitted only on the corresponding training rows. All candidate scores are reported, including unsuccessful refinements. Selection on the same outer CV results introduces tuning optimism; only the future untouched holdout can resolve final generalization.'''),
                  code("summary = sys.modules['src.member4'].run()\nprint('Selected development Macro-F1:', summary['selected_cv']['macro_f1'])\nassert summary['holdout_evaluated'] is False"),
                  md('## Inspect results and reproduce the split audit'),
-                 code("import pandas as pd\nfrom IPython.display import display, Image\nfrom src.data import load_clean, load_splits\nfrom src.splitting import validate_splits, split_summary\nclean = load_clean()\nsplits = load_splits(clean=clean)\nvalidate_splits(splits, clean)\ndisplay(split_summary(clean, splits))\ndisplay(pd.read_csv(ROOT / 'Member4_file/evidence/candidate_metrics.csv')[['model','accuracy','macro_precision','macro_recall','macro_f1','train_seconds']])\nfor name in ['m4_comparison.png','m4_oof_confusion.png','m4_learning_curves.png']:\n    display(Image(filename=str(ROOT / 'figures' / name)))"),
-                 md('## Team integration acceptance gate\nA successful Member 4 run does not certify missing team stages. The snapshot below records what was available in the supplied archive. Refresh with `Member4_file/build_notebooks.py --strict-final` after receiving complete contributions.'),
+                 code("import pandas as pd\nfrom IPython.display import display, Image\nfrom src.data import load_clean, load_splits\nfrom src.splitting import validate_splits, split_summary\nclean = load_clean()\nsplits = load_splits(clean=clean)\nvalidate_splits(splits, clean)\ndisplay(split_summary(clean, splits))\noutput = Path(summary['output_dir'])\ndisplay(pd.read_csv(output / 'candidate_metrics.csv')[['model','accuracy','macro_precision','macro_recall','macro_f1','train_seconds']])\nfor name in ['m4_comparison.png','m4_oof_confusion.png','m4_learning_curves.png']:\n    display(Image(filename=str(output / name)))"),
+                 md('## Original Member 4 handoff\nThe historical snapshot below records what was available when this archive was first produced. The current team notebook has a separate executable entry point.'),
                  code('status = '+repr(status)+"\ndisplay(pd.DataFrame(status))\nprint('Full team submission ready:', all(x['implemented'] for x in status))"),
                  md('''## Interpretation and handoff
 
@@ -115,13 +120,12 @@ Use the fixed `folds_v1.csv` for every model. Probability columns are always Neu
 The tested FastText MLP underperformed the sparse linear reference on development Macro-F1. Mean pooling removes token order, and 1,222 development rows provide limited supervision for 185,347 classifier parameters. These are plausible explanations, not causal findings. Class weighting and stronger regularization did not improve the selected score in the planned three-configuration search. Compare frozen multilingual SBERT when Member 5 supplies that cache. Do not claim a gain or a deployment throughput based on this small corpus.
 
 References: scikit-learn StratifiedGroupKFold documentation; PyTorch reproducibility and AdamW documentation; Bojanowski et al. (2017), Enriching Word Vectors with Subword Information. Team sources: project brief, report template, README and clean_v2 cleaning log supplied in the archive.''')]
-    nbf.write(nb, ROOT/'DSAI4205_DataVinci_Final.ipynb')
-    nbf.write(nb, ROOT/'notebooks/05_final/99_final.ipynb')
+    nbf.write(nb, output / 'Member4_Portable.ipynb')
     setup = "import sys\nfrom pathlib import Path\nROOT = next(p for p in [Path.cwd(), *Path.cwd().parents] if (p/'src/config.py').exists())\nsys.path.insert(0, str(ROOT))"
     split = nbf.v4.new_notebook(cells=[md('# Official grouped data partitions\nCao Taihe 24101734d. Seed 42. Preserve near-duplicate groups and reserve the holdout before training.'),code(setup),code('from src.data import load_clean\nfrom src.splitting import write_splits, split_summary\nclean = load_clean()\nsplits = write_splits(clean)\ndisplay(split_summary(clean, splits))')], metadata=nb.metadata)
-    nbf.write(split, ROOT/'notebooks/01_data/02_splits.ipynb')
+    nbf.write(split, output / '02_splits.ipynb')
     mlp = nbf.v4.new_notebook(cells=[md('# FastText and MLP\nCao Taihe 24101734d. Separate embedding and classifier. All results are development OOF scores. No test evaluation.'), code('import os\nos.environ.setdefault("MKL_THREADING_LAYER", "GNU")\n'+setup),code('from src.member4 import run\nsummary = run()\nsummary')], metadata=nb.metadata)
-    nbf.write(mlp, ROOT/'notebooks/03_models/23_m4_mlp.ipynb')
+    nbf.write(mlp, output / '23_m4_mlp.ipynb')
     print('Built portable single notebook and Member-4 entry notebooks; missing team stages:', ', '.join(missing))
 
 

@@ -64,6 +64,10 @@ python member1/svm.py --embedding sbert_multi --kernel linear --C 0.0001 0.0003 
 python member1/svm.py --embedding fasttext_mean --kernel rbf --C 0.1 1 10 --gamma scale 0.01 0.1
 ```
 
-Baseline 调参、Stacking 和最终模型对比仍未完成。
+At the time of this handoff, baseline tuning and the team comparison were pending. See “Submission comparison” below for the later results.
 
 历史临时运行输出和过时的 Notebook 草稿已清理。历史报告草稿可能仍写着 pending，以本交付记录为准。
+
+## Submission comparison
+
+The original baseline and SVM results above remain available as experiment history. The final table compares the fixed baseline (0.5820), nested tuned baseline (0.6135), and nested SBERT SVM rerun (0.5922). The 0.5985 SVM result used the same folds to select and score configurations. The final ensemble averages probabilities without fitting a stacking model.

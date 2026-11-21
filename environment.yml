@@ -1,5 +1,4 @@
-# 安装环境
-# 创建环境：conda env create -f environment.yml
+# Create with conda env create -f environment.yml
 name: dsai4205
 channels:
   - conda-forge

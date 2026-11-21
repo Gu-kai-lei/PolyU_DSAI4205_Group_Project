@@ -11,7 +11,7 @@
 | 3.4 kNN | `figures/m2_knn_k_curve.png`、`figures/m2_knn_confusion.png` |
 | 4.3 错误分析 | `figures/analysis_errors_vader.png` |
 
-提交前要更新的地方：附录 C 的进度表写到 11/20；SVM、XGBoost、BiLSTM 的预测到了以后，4.3 的数字要重跑；测试集被提前评分的问题，全组定下来以后在 5.5 补一句。
+Submission check: Section 4.3 uses the specified four development prediction sets. Confirm the reserve wording with the group before merging the final Word file.
 
 ---
 
@@ -51,7 +51,7 @@ Table 2  Data dictionary
 
 ## 2.1 Data quality: where the labels come from (paragraphs for member 3's section)
 
-The dataset description does not say how the tweets were labelled. If a sentiment lexicon produced the labels, our models would learn to imitate that lexicon, and its score could not be used as a feature. We therefore tested VADER (Hutto & Gilbert, 2014) with its recommended ±0.05 threshold on the compound score. The test uses the 1,666 readable tweets: the 1,525 retained tweets plus the 141 non-English and word-less tweets, which belong to the evidence. VADER reproduces 93.0% of the labels (Cohen's κ = 0.89), while TextBlob, a different lexicon, reproduces 60.2% (κ = 0.40). On our cleaned text VADER agrees with 92.1% of the labels.
+The dataset description does not say how the tweets were labelled. If a sentiment lexicon produced the labels, our models would learn to imitate that lexicon, and its score could not be used as a feature. We therefore tested VADER (Hutto & Gilbert, 2014) with its recommended ±0.05 threshold on the compound score. The test uses the 1,666 readable tweets: the 1,525 retained tweets plus the 141 non-English and word-less tweets, which belong to the evidence. VADER reproduces 93.0% of the labels (Cohen's κ = 0.89), while TextBlob, a different lexicon, reproduces 60.2% (κ = 0.40). On the cleaned text in this 1,666-tweet check, VADER agrees with 92.1% of the labels. The submission notebook reports 92.06% on the raw text of the 1,222 development tweets, a separate calculation with a different denominator.
 
 Other observations point the same way. VADER scores unknown words as zero, and 72.5% of the 102 non-English tweets are labelled Neutral, against 28.4% of the retained tweets (Figure [n]); of the 28 non-English tweets labelled Positive or Negative, 27 get the same label from VADER, through English words or words that VADER reads as English, such as Spanish *sin*. All 39 tweets without words are Neutral. The source file also lost the apostrophe in some negations (*don__ panic*). Restoring the negation changes VADER's label for 14 retained tweets, and in 13 of them the given label follows the damaged text. Tweets with lost characters agree slightly less often (91.2% against 93.7%), which these observations do not explain.
 
@@ -130,7 +130,7 @@ Table [n]  kNN cross-validated results by embedding
 | FastText, mean | 9 | equal | 0.481 | 0.473 | 0.451 | 0.524 | 0.445 |
 | FastText, SIF | 21 | distance | 0.468 | 0.453 | 0.390 | 0.540 | 0.429 |
 
-kNN stays below the TF-IDF baseline (0.582). The labels appear to follow a word-level lexicon, and logistic regression on word counts can learn a weight for each sentiment word, while kNN votes among tweets that are close in overall meaning and need not share those words. Negative tweets are the hardest: kNN finds 157 of the 388 (recall 0.40) and predicts 114 as Neutral and 117 as Positive (Figure [n]). The FastText vectors, learned from about 1,000 tweets, do worse than Sentence-BERT.
+SBERT kNN scored 0.5395 after same-fold parameter selection and about 0.522 in the nested check. It trails both the fixed TF-IDF baseline (0.5820) and the nested tuned baseline (0.6135). The labels appear to follow a word-level lexicon, and logistic regression on word counts can learn a weight for each sentiment word, while kNN votes among tweets that are close in overall meaning and need not share those words. Negative tweets are the hardest: kNN finds 157 of the 388 (recall 0.40) and predicts 114 as Neutral and 117 as Positive (Figure [n]). The FastText vectors, learned from about 1,000 tweets, do worse than Sentence-BERT.
 
 We also tested whether questionable labels hurt kNN by removing tweets from the training folds only. Confident learning (Northcutt et al., 2021) flags a third of each training part (33.4%). Over the five folds it flags 72% of the VADER disagreements at least once, but also 51% of the other tweets. Training without the flagged tweets lowers the score to 0.494, and training without the VADER disagreements lowers it to 0.521, so kNN trains on all tweets.
 
@@ -138,7 +138,7 @@ We also tested whether questionable labels hurt kNN by removing tweets from the 
 
 ## 4.3 Error analysis
 
-We compared the out-of-fold predictions of the four models that have them: TextCNN, the TF-IDF baseline, kNN on Sentence-BERT and the FastText MLP (rerun in the team environment). All four misclassify 152 of the 1,222 development tweets (12.4%), while 1,070 tweets (87.6%) are classified correctly by at least one model, so stacking has room to help.
+We compared four frozen sets of out-of-fold predictions: TextCNN, the fixed TF-IDF baseline, SBERT kNN and the archived FastText MLP run. This sample of models keeps Table 8 and its counts tied to the same predictions. All four misclassify 152 of the 1,222 development tweets (12.4%), while 1,070 tweets (87.6%) are classified correctly by at least one model, which gives us a reason to compare the models’ errors before trying fusion.
 
 The tweets that every model gets wrong more often have a questionable label. VADER disagrees with the given label for 13.2% of them, against 3.4% of the tweets that no model gets wrong, and the share rises with the number of models that fail (Figure [n]). Finance terms are also more common: 39.5% of these tweets contain words such as *red*, *green*, *bearish*, *bullish*, *Fed* or *Nifty*, against 26.4% of the others (odds ratio 1.81, Fisher's exact test p = 0.001). The counts for single words are small, so we rely on the combined test. A third group of errors comes from the damaged file: 9.9% of these tweets contain a negation whose apostrophe was lost (*don__ panic*), against 3.6% of the others. A lexicon reads such a tweet without the negation, while our cleaned text restores it, so the models and the label disagree.
 
@@ -146,7 +146,7 @@ The most common error is predicting Positive for a Neutral or Negative tweet (64
 
 Table 8  Representative classification errors (predicted label = most common prediction of the four models; a tie lists both)
 
-| Case | True label | Predicted label | Explanation |
+| Case | Given label | Predicted label | Explanation |
 |---|---|---|---|
 | 1574 | Negative | Positive | "Don__ panic. Look at the bigger picture." The file lost the apostrophe of *don't*, so a lexicon reads *panic* without the negation (VADER −0.51; +0.40 with *don't* restored). Our cleaning restores *don't*, and the models read the encouragement. |
 | 806 | Positive | Negative or Neutral (2 models each) | "Blood bath continues in Indian stock Market ... NIFTY: 16,842 -308 ... Market tanks over 2000 points." The only lexicon word is *Nifty* (+1.7), so the label is Positive although the tweet reports a fall. |
@@ -165,7 +165,7 @@ The labels agree closely with the VADER lexicon, but the original labelling proc
 
 The source file damaged emoji and apostrophes. We restored only the apostrophe patterns we could verify and removed the rest, but 397 retained tweets (26.0%) lost characters, and emoji often carry sentiment. Lemmatisation also loses some meaning: it turns *Fed* into *feed* in 12 of the 37 retained tweets that contain the word, and `text_norm` drops prices and percentages, which remain only in `text_clean`.
 
-The data is small. Each training fold has fewer than 1,000 tweets and the test split has 303, so small differences between models on the test split are uncertain, and we will report intervals with the final test scores. Scores of tuned models are optimistic when the setting is chosen on the folds that score it; for kNN the nested estimate is 0.017 lower. The small corpus also limits embeddings trained from scratch, as the FastText neighbours show.
+Each training fold has fewer than 1,000 tweets. Earlier BiLSTM and imbalance experiments used the labels on the 303 reserve rows to report scores. The technical submission leaves those rows unscored and reports the exploratory ensemble on the development folds. Any decision to include the old reserve scores belongs in Section 4.2 with their original protocols. Scores of tuned models are optimistic when the setting is chosen on the folds that score it; for kNN the nested estimate is 0.017 lower. The small corpus also limits embeddings trained from scratch, as the FastText neighbours show.
 
 The tweets come from one year and were collected through crash-related hashtags, so they centre on market falls. Crypto terms appear in 31.5% of the retained tweets and Indian market terms in 13.5%, against 7.3% for the US market. The experiments use English text only, so the results do not cover the 102 non-English tweets or the users who wrote them.
 
@@ -225,16 +225,17 @@ C.3 Iterations
 | 26 Oct | Non-English and word-less tweets set aside | Most are labelled Neutral and an English lexicon cannot check their labels; all rows stay in `clean_v2_all.csv` |
 | 26 Oct | Second language check added | 16 French, Spanish, Italian and Romanian tweets had passed the first rule; the retained set went from 1,541 to 1,525 tweets |
 | 26 Oct | FastText made smaller and reproducible | 200,000 hash buckets instead of two million, one worker and a fixed seed |
-| 27 Oct | Test split no longer scored during development | The test split should not influence model choices; it is scored once, after the experiment freeze |
+| 27 Oct | Plan to reserve the test split until the experiment freeze | Later BiLSTM and imbalance runs reported scores on it. The technical submission records this history and does not score it again. |
 | 27 Oct | Two label-noise filters for kNN tested and rejected | With FastText vectors both lowered macro-F1 (0.461 and 0.456 against 0.473) |
 | 2 Nov | Official baseline run on `folds_v1` | Macro-F1 0.582; member 1's own rerun on 4 Nov gave the same score |
 | 4 Nov | MLP with three configurations | In member 4's environment both refinements lowered macro-F1; in the team environment the regularized version scored highest. The report gives both |
 | 4 Nov | Interim report wording revised after review | Label origin described as a hypothesis; set-aside tweets described as kept in `clean_v2_all.csv` |
 | 12 to 14 Nov | TextCNN candidates compared with nested selection | Configurations C0, C1, C3 and C7 compared; C3 adopted (macro-F1 0.618) |
-| 18 Nov | BiLSTM with attention; imbalance comparison | BiLSTM 0.550; class weighting and oversampling 0.527 against 0.509 without, on FastText mean vectors |
+| 18 Nov | Historical BiLSTM and imbalance experiments | The BiLSTM score of 0.550 used the scoring fold for early stopping. The original imbalance run gave 0.5092, 0.5274 and 0.5268 for no adjustment, weights and oversampling. |
 | 18 Nov | kNN with Sentence-BERT and a nested check | 0.539 tuned, 0.522 nested; both label-noise filters lowered the score again |
 | 18 Nov | Error analysis on four models | 152 tweets wrong in every model; labels follow the damaged text in 13 of 14 negation cases |
 | 19 Nov | Member 5's deliverables reduced to one notebook | Intermediate evidence removed from the repository |
+| 21 Nov | Final development review | Nested baseline 0.6135, corrected BiLSTM 0.5211 and exploratory equal-weight fusion 0.6639. The imbalance rerun gave 0.5164, 0.5230 and 0.5354 with its regenerated FastText cache. |
 
 C.4 Collaboration
 

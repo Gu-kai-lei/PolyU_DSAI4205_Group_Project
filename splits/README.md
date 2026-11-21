@@ -1,8 +1,5 @@
-# 全组统一的数据划分
+# Grouped folds
 
-由 4 号生成并维护全组共用的 `folds_v版本号.csv`，版本由 `src/config.py` 的 `SPLIT_VERSION` 指定。
+[folds_v1.csv](folds_v1.csv) assigns each cleaned tweet to one split using its `id` and `group_id`. The 1,222 development rows have fold numbers 0 through 4. The 303 reserve rows have fold number -1.
 
-划分包含 `id`、`group_id`、`split` 和 `fold`。同一组近似重复文本应留在同一划分或折中。
-
-已冻结版本保留存档。清洗数据增删记录或修改分组后，按项目首页的版本规则生成新划分，并更新相关实验。
-
+Every tweet in a related-text group stays in the same fold or reserve. The [split notebook](../notebooks/01_data/02_splits.ipynb) can reproduce the assignment from `clean_v2` with seed 42.

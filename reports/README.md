@@ -1,6 +1,5 @@
-# 最终报告和 PPT
+# Report material
 
-保存已经提交的 Word 报告和展示 PPT，便于组员查阅提交版本。
+The [technical submission](../submission/DataVinci.ipynb) is in the submission folder. This directory holds the interim report and the draft text for the [final report](DataVinci_Final_Report.md) and [presentation](DataVinci_Presentation.md).
 
-最终 Notebook 的整合入口是 [notebooks/05_final/](../notebooks/05_final/)。各成员先完成自己负责部分的文字和图表，报告章节交给 6 号、PPT 页交给 5 号统一格式，最后由 6 号提交。
-
+Use the [report assembly notes](Submission_Review.md) to match the Word tables and individual sections to the notebook.

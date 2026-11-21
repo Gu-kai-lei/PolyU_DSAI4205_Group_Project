@@ -1,18 +1,9 @@
-# 全组共用函数
+# Shared code
 
-Notebook 通过这里的函数读取数据、计算指标和保存缓存。
+- `config.py`, `data.py`, and `splitting.py` load and check the frozen experiment inputs.
+- `cache.py` aligns embeddings and predictions by tweet ID. `evaluate.py` computes the shared metrics.
+- `fasttext_emb.py` fits the fold-specific embeddings, and `training.py` runs the PyTorch training loop.
+- `member1.py`, `member4.py`, and `member6.py` contain the SVM, MLP, and BiLSTM paths.
+- `project_review.py` reproduces the baseline and checks the evidence used in the final comparison.
 
-| 文件 | 用途 |
-|---|---|
-| `config.py` | 路径、随机种子、标签和版本号 |
-| `data.py` | 读取数据并检查清洗结果与划分是否一致 |
-| `evaluate.py` | 生成 run_id、统一评分、保存结果和绘制混淆矩阵 |
-| `cache.py` | 按样本 ID 对齐嵌入，按 run_id 保存预测概率 |
-| `cleaning.py` | clean_v1 的清洗流程（已冻结，只为复现 v1 保留）；当前版本的清洗脚本是 `data/clean_v2/clean_v2.py` |
-| `fasttext_emb.py` | 按折训练 FastText，生成平均和 SIF 句向量及 token 向量序列 |
-| `splitting.py` | 生成和检查固定数据划分 `splits/folds_v1.csv`（4 号） |
-| `training.py` | PyTorch 训练模板：MLP、掩码池化、早停训练和概率预测，给 4、5、6 号共用（4 号，用法见 `Member4_file/TRAINING_GUIDE.md`） |
-| `member4.py` | 4 号的 FastText + MLP 实验，由 `23_m4_mlp` 调用 |
-
-修改公共函数的参数或返回值前，请先与维护人协调，并同步受影响的 Notebook。
-
+The [submission](../submission/DataVinci.ipynb) includes the code and data it needs.
