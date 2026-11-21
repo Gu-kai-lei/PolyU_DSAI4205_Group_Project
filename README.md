@@ -45,11 +45,11 @@ The fusion classified 811 tweets correctly. We chose that combination after revi
 
 ## Team
 
-| Name | Student ID |
-|---|---|
-| FENG Dingran | 24128996D |
-| GU Kailei | 24102618D |
-| CHOI CHUN MAN | 24133223D |
-| YANG Qitian | 24128112D |
-| CAO Taihe | 24101734D |
-| YU Guanlin | 24107216D |
+| Name | Student ID | Model | Other responsibilities |
+|---|---|---|---|
+| FENG Dingran | 24128996D | SVM | TF-IDF baseline, model comparison and ensemble experiments |
+| GU Kailei | 24102618D | kNN | Data cleaning, fold-specific FastText, error analysis, project coordination and the interim report |
+| CHOI CHUN MAN | 24133223D | BiLSTM with attention | Class imbalance experiments, report formatting and submission coordination |
+| YANG Qitian | 24128112D | XGBoost | Exploratory analysis, SHAP plots and interpretation of the results |
+| CAO Taihe | 24101734D | MLP | Grouped data split, shared PyTorch training code and notebook integration |
+| YU Guanlin | 24107216D | TextCNN | SBERT sentence and token embeddings and slide design |
