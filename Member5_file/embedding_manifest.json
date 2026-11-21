@@ -1,0 +1,24 @@
+{
+  "data_version": "clean_v2",
+  "split_version": "folds_v1",
+  "seed": 42,
+  "data_sha256": "82800e84083982d2f4735c61281f19d78329df419bf429acf7e58f7a8dda126d",
+  "split_sha256": "c84f99358e946cf71da3e7f3902a5f47213d0768e84d618cc39557ddd48294e2",
+  "model": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+  "revision": "4328cf26390c98c5e3c738b4460a05b95f4911f5",
+  "max_len": 82,
+  "sentence_pooling": "attention-masked mean including special tokens, then L2",
+  "sequence_policy": "remove special tokens; compact real tokens; zero right padding",
+  "length_source": "development texts only, 99th percentile capped at model default 128",
+  "precision": "float32 inference; float16 token storage",
+  "frozen": true,
+  "seconds": 23.72705650003627,
+  "files": {
+    "sbert_multi.npy": "7a583ff05cae2bb2e50eda821fea4580fbd8e84ea34c98f9654763da62497c9c",
+    "sbert_multi_ids.npy": "7be567b2f824a931bd784ce12af3906905ff8439f9cafdb2d410672f4ce09c5a",
+    "tokens_multi.npy": "13f8a548e75aa6404ce49e73510245f753ef4df5f71e8734f5b4d134126c28ab",
+    "tokens_multi_ids.npy": "7be567b2f824a931bd784ce12af3906905ff8439f9cafdb2d410672f4ce09c5a",
+    "tokens_mask.npy": "94ebbbf573de58be4579ef1d0e23bf537b0fe9d50c78f3ea77e0272cf60a627c",
+    "tokens_mask_ids.npy": "7be567b2f824a931bd784ce12af3906905ff8439f9cafdb2d410672f4ce09c5a"
+  }
+}

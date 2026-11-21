@@ -1,0 +1,10 @@
+# Member 5 reference environment (Python 3.12)
+torch==2.11.0
+transformers==4.57.6
+numpy==1.26.4
+scipy==1.13.1
+pandas==2.2.3
+scikit-learn==1.5.2
+matplotlib==3.9.2
+safetensors==0.8.0
+ipykernel==7.4.0
