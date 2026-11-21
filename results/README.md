@@ -1,6 +1,3 @@
-# 模型评分
+# Score tables
 
-每个模型使用独立的 CSV 文件保存实验结果，每次实验占一行，并记录 `run_id`、数据版本、划分版本和参数。
-
-通过 `src/evaluate.py` 的公共函数计算和保存指标。相同实验的评分记录与预测文件使用同一个 `run_id`，便于复核和集成。
-
+Rows identify the model, run ID, data version and split version. Use the run ID to match a score to its prediction files. The [submission notebook](../submission/DataVinci.ipynb) explains the evaluation protocol for each result it reports.

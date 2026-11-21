@@ -6,11 +6,11 @@
    再用完整的外层训练部分按这个轮数重新训练，预测外层验证折，得到 OOF 概率
 3. 标准化只在对应的训练行上拟合，类别权重只用训练行计算
 4. 按 OOF Macro-F1 选出最好的一组；用全部开发集按各折轮数的中位数重新训练，只保存测试集概率，不评分
-5. 成绩写入 results/m4_mlp.csv，概率按 run_id 保存，证据表写入 Member4_file/evidence/，图写入 figures/
+5. 成绩写入 results/m4_mlp.csv，概率按 run_id 保存，证据表和图写入本次运行的 local_artifacts/m4 目录
 
 三组参数在同一份外层交叉验证上比较，选出来的分数偏乐观；真正的泛化表现要等实验冻结后看测试集。
 
-入口：run() 返回概况字典（与 Member4_file/summary.json 的结构一致）。
+入口：run() 返回概况字典（与 experiments/Member4_file/summary.json 的结构一致）。
 
 维护人：4 号。
 """
@@ -32,13 +32,13 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 from .cache import load_embedding
-from .config import FIGURES_DIR, LABELS, N_FOLDS, PROJECT_ROOT, SEED
+from .config import LABELS, N_FOLDS, PROJECT_ROOT, SEED
 from .data import load_clean, load_splits
 from .evaluate import evaluate, new_run_id, plot_confusion, save_result
-from .fasttext_emb import build_fold_embeddings, tokenize
+from .fasttext_emb import build_fold_embeddings, mean_vectors, tokenize, train_fasttext
 from .training import MLP, TrainConfig, fit_model, predict_proba, save_predictions, seed_everything
 
-EVIDENCE_DIR = PROJECT_ROOT / "Member4_file" / "evidence"
+OUTPUT_ROOT = PROJECT_ROOT / "local_artifacts" / "m4"
 EMBEDDING = "fasttext_mean"
 SHARED = {"hidden": (512, 256), "batch_size": 64, "max_epochs": 50, "patience": 7}
 CANDIDATES = [
@@ -50,7 +50,8 @@ CANDIDATES = [
 
 def _prepare_embeddings(clean: pd.DataFrame, splits: pd.DataFrame) -> float:
     """按当前划分重新训练按折的 FastText（约半分钟），保证嵌入和划分一致。返回耗时（秒）。"""
-    lengths = clean["text_norm"].map(lambda s: len(tokenize(s)))
+    dev_ids = splits.loc[splits["split"].eq("train"), "id"]
+    lengths = clean.set_index("id").loc[dev_ids, "text_norm"].map(lambda text: len(tokenize(text)))
     started = time.perf_counter()
     build_fold_embeddings(clean, splits, int(np.ceil(np.percentile(lengths, 99))))
     return time.perf_counter() - started
@@ -82,7 +83,11 @@ def _cross_validate(candidate: dict, dev: pd.DataFrame):
         y_train = y[~in_valid]
         inner = StratifiedGroupKFold(n_splits=N_FOLDS, shuffle=True, random_state=SEED)
         fit_idx, stop_idx = next(inner.split(x_train, y_train, train["group_id"]))
-        _, _, early = _train(x_train[fit_idx], y_train[fit_idx], x_train[stop_idx], y_train[stop_idx],
+        fit_tokens = train["text_norm"].iloc[fit_idx].map(tokenize).tolist()
+        stop_tokens = train["text_norm"].iloc[stop_idx].map(tokenize).tolist()
+        inner_embedding = train_fasttext(fit_tokens)
+        _, _, early = _train(mean_vectors(inner_embedding, fit_tokens), y_train[fit_idx],
+                             mean_vectors(inner_embedding, stop_tokens), y_train[stop_idx],
                              candidate, SHARED["max_epochs"])
         model, scaler, _ = _train(x_train, y_train, None, None, candidate, early["best_epoch"])
         oof[in_valid] = predict_proba(model, scaler.transform(load_embedding(f"{EMBEDDING}_fold{k}", ids=valid["id"])))
@@ -112,7 +117,7 @@ def _baseline_reference(dev: pd.DataFrame) -> dict:
 
 
 def _figures(candidates: pd.DataFrame, reference: dict, dev: pd.DataFrame, oof: np.ndarray, history: pd.DataFrame,
-             selected: str) -> None:
+             selected: str, output) -> None:
     """三张图：候选和参照的 Macro-F1、所选模型的 OOF 混淆矩阵、内层验证的学习曲线。"""
     surface, ink, ink_2, axis = "#fcfcfb", "#0b0b0b", "#52514e", "#c3c2b7"
     names = list(candidates["name"]) + ["TF-IDF + LR reference"]
@@ -131,11 +136,11 @@ def _figures(candidates: pd.DataFrame, reference: dict, dev: pd.DataFrame, oof: 
     ax.set_xlabel("development OOF macro-F1", fontsize=8, color=ink_2)
     ax.set_title("FastText + MLP candidates and the same-fold reference", loc="left", fontsize=10, color=ink)
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "m4_comparison.png", dpi=200, facecolor=surface)
+    fig.savefig(output / "m4_comparison.png", dpi=200, facecolor=surface)
     plt.close(fig)
 
     fig = plot_confusion(dev["label"], oof.argmax(1), f"MLP ({selected}), out-of-fold",
-                         save_as=FIGURES_DIR / "m4_oof_confusion.png")
+                         save_as=output / "m4_oof_confusion.png")
     plt.close(fig)
 
     curves = history[history["candidate"] == selected]
@@ -151,7 +156,7 @@ def _figures(candidates: pd.DataFrame, reference: dict, dev: pd.DataFrame, oof: 
     ax.set_title(f"Early stopping on the inner split ({selected})", loc="left", fontsize=10, color=ink)
     ax.legend(frameon=False, fontsize=7, ncol=5, loc="lower right")
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "m4_learning_curves.png", dpi=200, facecolor=surface)
+    fig.savefig(output / "m4_learning_curves.png", dpi=200, facecolor=surface)
     plt.close(fig)
 
 
@@ -164,7 +169,6 @@ def run() -> dict:
     dev = data[data["split"] == "train"].reset_index(drop=True)
     test = data[data["split"] == "test"].reset_index(drop=True)
     embedding_seconds = _prepare_embeddings(clean, splits)
-    EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
 
     rows, oofs, epochs, fold_rows, history = [], {}, {}, [], []
     for candidate in CANDIDATES:
@@ -184,6 +188,8 @@ def run() -> dict:
 
     candidates = pd.DataFrame(rows)
     best = candidates.loc[candidates["macro_f1"].idxmax()]
+    output = OUTPUT_ROOT / best["run_id"]
+    output.mkdir(parents=True, exist_ok=False)
     selected = next(c for c in CANDIDATES if c["name"] == best["name"])
 
     # Final refit on the whole development set; test probabilities are saved for stacking but not scored
@@ -208,20 +214,20 @@ def run() -> dict:
     report = classification_report(dev["label"], selected_oof.argmax(1), labels=list(LABELS),
                                    target_names=list(LABELS.values()), output_dict=True, zero_division=0)
 
-    candidates.drop(columns="name").to_csv(EVIDENCE_DIR / "candidate_metrics.csv", index=False)
-    folds.to_csv(EVIDENCE_DIR / "fold_metrics.csv", index=False)
+    candidates.drop(columns="name").to_csv(output / "candidate_metrics.csv", index=False)
+    folds.to_csv(output / "fold_metrics.csv", index=False)
     folds.groupby("candidate")["macro_f1"].agg(["mean", "std", "min", "max"]).reset_index().to_csv(
-        EVIDENCE_DIR / "fold_statistics.csv", index=False)
-    pd.DataFrame([reference]).to_csv(EVIDENCE_DIR / "baseline_reference.csv", index=False)
-    history.to_csv(EVIDENCE_DIR / "training_history.csv", index=False)
-    oof_table.to_csv(EVIDENCE_DIR / "selected_oof_predictions.csv", index=False)
-    pd.DataFrame(report).T.to_csv(EVIDENCE_DIR / "selected_classification_report.csv")
-    _figures(candidates, reference, dev, selected_oof, history, selected["name"])
+        output / "fold_statistics.csv", index=False)
+    pd.DataFrame([reference]).to_csv(output / "baseline_reference.csv", index=False)
+    history.to_csv(output / "training_history.csv", index=False)
+    oof_table.to_csv(output / "selected_oof_predictions.csv", index=False)
+    pd.DataFrame(report).T.to_csv(output / "selected_classification_report.csv")
+    _figures(candidates, reference, dev, selected_oof, history, selected["name"], output)
 
     packages = ["numpy", "pandas", "scikit-learn", "torch", "gensim", "matplotlib"]
     summary = {
         "embedding": EMBEDDING, "development_rows": len(dev), "test_rows": len(test), "holdout_evaluated": False,
-        "selected_source_run": best["run_id"], "selected_parameters": {**selected, **SHARED,
+        "output_dir": str(output), "selected_source_run": best["run_id"], "selected_parameters": {**selected, **SHARED,
                                                                         "epochs_by_fold": epochs[selected["name"]]},
         "full_refit_epochs": refit_epochs,
         "selected_cv": {k: (v.item() if hasattr(v, "item") else v) for k, v in best.drop(labels="name").items()},
@@ -230,5 +236,5 @@ def run() -> dict:
         "environment": {"python": platform.python_version(), "packages": {p: version(p) for p in packages}},
         "caution": "Three configurations compared on the same outer CV: the selected score is optimistic; the test split is not scored.",
     }
-    (EVIDENCE_DIR / "summary.json").write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8")
+    (output / "summary.json").write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8")
     return summary

@@ -4,7 +4,7 @@
 
 ## 已交付：kNN 预测（给 1 号做 Stacking 和总对比）
 
-由 `notebooks/03_models/21_m2_knn.ipynb` 生成，对应 `results/m2_knn.csv` 中交叉验证分数最高的一次（SBERT 句向量，k=41，按距离加权，CV macro-F1 0.539；参数在同一套折上调，嵌套估计 0.522）。重跑 notebook 会生成新的 run_id 并覆盖这两个文件。
+由 `notebooks/03_models/21_m2_knn.ipynb` 生成，对应 `results/m2_knn.csv` 中交叉验证分数最高的一次（SBERT 句向量，k=41，按距离加权，CV macro-F1 0.539；参数在同一套折上调，嵌套估计 0.522）。重跑 notebook 会在 `local_artifacts/knn/<run_id>/` 生成独立预测文件。以下文件保留为归档交接证据。
 
 | 文件 | 内容 |
 |---|---|

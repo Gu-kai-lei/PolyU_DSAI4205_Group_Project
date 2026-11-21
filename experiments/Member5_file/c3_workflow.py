@@ -9,8 +9,8 @@ from safetensors.torch import save_file
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import StratifiedGroupKFold
 
-from Member5_file.mvp import TextCNN
-from Member5_file.sbert_cache import prepare_embeddings
+from experiments.Member5_file.mvp import TextCNN
+from experiments.Member5_file.sbert_cache import prepare_embeddings
 from src.cache import load_embedding
 from src.config import DATA_ROOT, LABELS, N_FOLDS, VERSION_TAGS
 from src.data import load_clean, load_splits

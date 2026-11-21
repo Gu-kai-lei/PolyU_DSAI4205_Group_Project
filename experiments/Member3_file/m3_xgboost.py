@@ -22,7 +22,7 @@ from sklearn.model_selection import StratifiedGroupKFold
 from threadpoolctl import threadpool_limits
 import xgboost as xgb
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from src.cache import load_embedding, save_embedding, save_preds
 from src.config import CLEAN_DIR, EMB_DIR, LABELS, N_FOLDS, SEED, SPLITS_DIR, VERSION_TAGS
@@ -187,9 +187,12 @@ def shap_outputs(arr, output_path):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--onnx-dir', type=Path, help='Official model.onnx and tokenizer.json at the pinned revision')
-    parser.add_argument('--output', type=Path, default=ROOT / 'Member3_file')
+    parser.add_argument('--output', type=Path, help='Evidence directory (defaults to a new local run)')
     args = parser.parse_args(argv)
-    out = args.output.resolve()
+    out = args.output or ROOT / 'local_artifacts' / 'xgboost' / new_run_id('xgboost', 'sbert_multi')
+    out = out.resolve()
+    if out == ROOT / 'experiments/Member3_file':
+        parser.error('Choose a different output directory to preserve the original handoff')
     out.mkdir(parents=True, exist_ok=True)
     clean = load_clean().sort_values('id').reset_index(drop=True)
     splits = load_splits(clean=clean).set_index('id').loc[clean.id].reset_index()

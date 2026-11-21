@@ -1,4 +1,4 @@
-"""PyTorch 训练模板：给 MLP（4 号）、TextCNN（5 号）和 BiLSTM（6 号）共用。用法见 Member4_file/TRAINING_GUIDE.md。
+"""PyTorch 训练模板：给 MLP（4 号）、TextCNN（5 号）和 BiLSTM（6 号）共用。用法见 experiments/Member4_file/TRAINING_GUIDE.md。
 
 约定：
 - 输入是句向量 (N, D) 或 token 序列 (N, L, D)；序列的 mask 是 (N, L) 的 bool，True 表示真实 token

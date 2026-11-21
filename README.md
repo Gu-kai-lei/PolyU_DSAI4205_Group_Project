@@ -1,8 +1,51 @@
-# DSAI4205 小组项目 · DataVinci
+# DataVinci: Sentiment in stock market crash tweets
 
-项目说明、分工和运行方法。
+DSAI4205 Big Data Analytics · The Hong Kong Polytechnic University · Dataset 3
 
-| 姓名 | 学号 |
+We classify tweets about the 2022 stock market crash as neutral, positive or negative. We used 1,525 of the 1,698 supplied tweets after cleaning. Near-duplicate tweets stay in the same group so that a validation fold cannot contain a close copy of one of its training examples.
+
+## Submission
+
+Open [DataVinci.ipynb](submission/DataVinci.ipynb). It contains the data, code and saved results. You can download the notebook by itself.
+
+To rerun it from the repository root:
+
+```sh
+conda env create -f environment.yml
+conda activate dsai4205
+jupyter lab submission/DataVinci.ipynb
+```
+
+In JupyterLab, select **Restart Kernel and Run All Cells**. The default run rebuilds the cleaning outputs, checks the fixed split, fits both baselines, and reads the saved scores and predictions for the final comparison. The appendix has switches for model retraining. The SBERT experiments need the pinned weights or a verified embedding cache.
+
+## Results
+
+These scores come from five grouped folds on the 1,222 development tweets.
+
+| Model | Accuracy | Macro-F1 |
+|---|---:|---:|
+| TF-IDF + logistic regression | 59.25% | 58.20% |
+| Tuned TF-IDF + logistic regression | 61.46% | 61.35% |
+| SBERT + TextCNN | 61.78% | 61.79% |
+| Tuned baseline + TextCNN, equal weights | 66.37% | 66.39% |
+
+The fusion classified 811 tweets correctly. We chose that combination after reviewing the development results, so it still needs an independent evaluation. This submission leaves the 303 reserve labels unscored. The notebook gives the full model comparison and confusion matrix.
+
+## Repository
+
+| Path | Contents |
+|---|---|
+| [DataVinci.ipynb](submission/DataVinci.ipynb) | Single-file technical submission |
+| [data/](data/) and [splits/](splits/) | Supplied tweets, cleaning records and the fixed folds |
+| [src/](src/) and [tests/](tests/) | Shared Python code and verification tests |
+| [notebooks/](notebooks/) | Working notebooks in experiment order |
+| [experiments/](experiments/) and [results/](results/) | Member handoffs, predictions and score tables |
+| [figures/](figures/) | Figures from individual experiments |
+| [docs/](docs/) and [reports/](reports/) | Course materials, project notes and report drafts |
+
+## Team
+
+| Name | Student ID |
 |---|---|
 | FENG Dingran | 24128996D |
 | GU Kailei | 24102618D |
@@ -10,394 +53,3 @@
 | YANG Qitian | 24128112D |
 | CAO Taihe | 24101734D |
 | YU Guanlin | 24107216D |
-
-DSAI4205 Big Data Analytics小组项目，占总分 25%。
-
-我们组分到 **Dataset 3：Huge crash in the Stock market**，内容是 2022 年 #stockmarketcrash / #bearmarket 推文，任务是做一个文本情感三分类的决策支持系统。
-
-> 这里只是摘要，具体要求以 [docs/materials/](docs/materials/) 里的原文为准。
-
-## 截止日期
-
-| 日期 | 交付物 | 占比 |
-|---|---|---|
-| **11/6（周五）23:55** | 中期报告：EDA、清洗、baseline 结果 | 20% |
-| **11/7（周六）14:25–15:00** | 答疑（consultation），已预约 | 含在上一项 |
-| **11/22（周日）23:55** | 展示用 PPT（12 分钟pre） | 20% |
-| **11/22（周日）23:55** | 最终报告 .docx + **单个** .ipynb | 60% |
-
-## 任务要求
-
-1. **EDA**：数据类型、粒度、分布、异常值、缺失和无效值、变量之间的相关性。
-2. **数据清洗**：缺失值、异常值、无效值、去重、标准化、变量变换。**每一步都要记进清洗日志。**
-3. **建模**（N = 组员人数 = 6）：
-   - i. Baseline：TF-IDF + 逻辑回归。**TF-IDF 只能用在 baseline 里。**
-   - ii. 6 个分析模型，每个都要搭配一个**独立的**词嵌入模型。逻辑回归不算在这 6 个里；同一个模型不能既做嵌入又做分类；TF-IDF 不算词嵌入。
-   - iii. 6 个模型分别和 baseline 比较，并解释差异。
-   - iv. 改进模型（调参、集成），然后再比较一次。
-   - v. 至少 6 张数据统计图。
-4. **可视化讲故事**：EDA 和最终结果都要用图来说明。
-
-最终报告（60%）的评分构成：
-
-| 评分项 | 占比 | 要点 |
-|---|---|---|
-| EDA 与清洗 | 20% | 粒度、分布、类别不平衡；小写、去标点、词形还原或词干化；清洗日志 |
-| Baseline | 10% | TF-IDF + LR，报告 Accuracy / Precision / Recall / F1 |
-| 高级建模 | 30% | 6 个"嵌入 + 分类器"组合，写清整合思路；用课外模型、从零训练会加分；模型同质化会扣分 |
-| Refinement | 10% | 调参证据，不平衡处理 |
-| 创新 | 10% | 特征工程、新颖的方法组合、深入的商业洞察 |
-| 项目开发与文档 | 20% | 详细时间表、个人分工、实验和迭代过程的证据 |
-
-报告必须按老师给的模板写：[DSAI4205_Final_Report_Template.pdf](docs/materials/DSAI4205_Final_Report_Template.pdf)。
-
-## 数据集要点
-
-- 原始数据 1,698 条推文，两列：`text` 和 `text_sentiment`，其中 **0 = Neutral，1 = Positive，2 = Negative**；类别分布 Positive 627 / Neutral 575 / Negative 496
-- 当前清洗版本 **clean_v2 保留 1,525 条**：Positive 607（39.8%）/ Neutral 433（28.4%）/ Negative 485（31.8%），最大类与最小类之比 1.40。每一步删了什么、为什么，见 [clean_v2_log.md](data/clean_v2/clean_v2_log.md)
-- 已在仓库里核实的数据问题（`01_cleaning`、`31_label_noise_errors`）：
-  - 标签很可能是 VADER 自动生成的：VADER 在原文上和标签的一致率约 93%，换成另一个情感词典 TextBlob 只有约 60%
-  - 原文件把弯引号 `’` 连同后一个字符替换成了 `__`（`it’s` → `it__`），emoji 也被破坏；部分推文有双重编码乱码
-  - 有完全重复、内容重复和模板推文（如 "Candle of day … closed"）；后者用 `group_id` 分组，划分时不能拆开
-  - 混有西班牙语、印地语拼音等非英文推文，标签大多是 Neutral（VADER 读不懂外语），clean_v2 已删除
-- 还待确认：TF-IDF + LR 的准确率（初步测试约 62%，由 1 号在 `03_baseline` 复现）；Neutral 推文是否更短（3 号 EDA）
-
-## 分工
-
-每人负责 1 个"嵌入 + 分类器"模型，再加 1–2 项公共任务。**报告和 PPT 每人写自己负责的部分**，最后由 6 号统一报告格式、5 号统一 PPT 格式（只统一格式，不改别人的内容）。文中加粗的词在[名词速查](#名词速查)里有大白话解释，不用去读原文。
-
-| # | 成员 | 模型 | 公共任务 | 报告章节 | PPT |
-|---|---|---|---|---|---|
-| 1 | FENG Dingran | SVM | Baseline、Stacking 集成、模型总对比和选最终模型 | 3.4、4.1、4.2、5.1 | 结果对比（2 分钟） |
-| 2 | GU Kailei | kNN | 清洗和 FastText、错误分析、项目协调、中期报告汇总提交 | 1.3、3.1、3.3（清洗和 FastText）、4.3、5.5、附录 C | 清洗和标签来源（2 分钟） |
-| 3 | Brain & Yang Qitian | XGBoost | EDA（至少 6 张图）、SHAP、商业洞察 | 第 2 章、5.3 | EDA 1 分钟 + 商业洞察 1 分钟 |
-| 4 | CAO Taihe | MLP | 数据划分、PyTorch 训练模板、合并最终 notebook | 3.2、3.5、5.4、附录 A | 公平比较和 MLP（2 分钟） |
-| 5 | YU Guanlin | TextCNN | SBERT 句向量和 token 序列、PPT 模板和统一格式、组织排练 | 3.3（SBERT 和 token 序列） | 文本向量和 TextCNN（2 分钟） |
-| 6 | Brain & Yang Qitian | BiLSTM + Attention | 不平衡处理、报告模板和统一格式、最终提交 | 摘要、1.1、1.2、5.2、5.6 | 开场 1 分钟 + 收尾 1 分钟 |
-
-每人还要在报告 3.4 节写自己模型的一段（英文），写清四件事：嵌入怎么接到分类器、超参数和调参过程、结果、和 baseline 比为什么更好或更差。
-
-剩余工作量粗略估算（单位：半天，不含每人都要写的报告和 PPT）：1、3、4、5、6 号各约 6.5；2 号约 5，因为清洗、FastText 和 kNN 主体已经完成。
-
-每个人对应的 notebook 见 [notebooks/README.md](notebooks/README.md)，每个 notebook 开头都列了具体任务清单。标"（选做）"的任务等必做部分完成后再做。
-
-### 每个人要做什么
-
-日期是最晚交付时间。点开自己的编号查看。
-
-<details>
-<summary><b>1 号 · FENG Dingran · SVM、Baseline、模型总对比</b></summary>
-
-目标：给全组定一条"及格线"，最后告诉大家哪个模型最好、好在哪。
-
-- **11/1**：在 `text_norm` 上跑 **Baseline**（**TF-IDF** + 逻辑回归），算 **Accuracy、Precision、Recall、F1** 和**混淆矩阵**，画出每类权重最高的词
-- **11/4**：中期报告的 baseline 部分交给 2 号
-- **11/13**：SVM 第一版：输入 SBERT 和 FastText 句向量（FastText 用对应**折**的版本），比较线性核和 RBF 核，**调参** C、gamma
-- **11/17**：Baseline 调参后再评估一次（**改进 3iv**）；用全组的 **OOF 预测**概率做 **Stacking**，和软投票比
-- **11/18**：出两张总对比表：各模型 vs baseline（**对比 3iii**）、改进后再比一次（3iv）；按 **Macro-F1** 选最终模型，在测试集上只跑这一次
-- 等谁：4 号划分（10/29）、5 号 SBERT（11/8）、全员预测概率（11/15）
-
-</details>
-
-<details>
-<summary><b>2 号 · GU Kailei · kNN、错误分析、项目协调</b></summary>
-
-目标：数据和 FastText 已交付；接下来找出"所有模型都判错的推文"，并盯住进度和中期报告。
-
-- 已完成：`clean_v2` 清洗和**清洗日志**、按折**从零训练**的 FastText、kNN 主体、**VADER** 标签来源检验
-- **10/28**：组会，确认分工
-- **划分出来后 1 天内**：kNN 正式结果
-- **11/6**：11/4 前收齐 1、3、4 号的中期报告部分，统一格式后提交**中期报告**
-- **11/7 14:25–15:00**：主持答疑（已预约），记录老师的答复
-- **每周**：组会记录写进 `docs/meetings/`，检查进度，谁卡住就帮谁
-- **11/17**：错误分析：找出所有模型都判错的推文，看是不是 bear、short、dip 这类金融说法被读错；结果交给 3 号和 6 号
-- 等谁：4 号划分（10/29）、全员预测概率（11/15）
-
-</details>
-
-<details>
-<summary><b>3 号 · Brain & Yang Qitian · XGBoost、EDA、商业洞察</b></summary>
-
-目标：讲清楚"数据长什么样"，以及"结论对投资者有什么用"。
-
-- **11/1**：**EDA** 6 张图，每张回答一个问题：① 三类各多少，是否**类别不平衡** ② Neutral 推文是不是更短 ③ 最常见的 hashtag ④ 每类最常用的词 ⑤ 加密 / 美股 / 印度子市场的情绪差别 ⑥ 长度、hashtag 数和情绪有没有关系
-- **11/1**：数据质量数字：**数据粒度**、缺失、重复、文本长度中位数（报告表 3）
-- **11/4**：中期报告的 EDA 部分交给 2 号
-- **11/13**：XGBoost 第一版：句向量降到 64–128 维，加上 `clean_v2` 里现成的 13 个特征列（**特征工程**）；用 early stopping，调树深和学习率
-- **11/17**：用 **SHAP** 画出最重要的特征；结合 2 号的错误分析写**商业洞察**
-- 等谁：4 号划分（10/29）、5 号 SBERT（11/8）
-
-</details>
-
-<details>
-<summary><b>4 号 · CAO Taihe · MLP、数据划分、最终 notebook</b></summary>
-
-目标：保证全组用同一套训练集和测试集，最后交出一个能从头跑通的 notebook。
-
-- **10/29（全组最急）**：生成 `splits/folds_v1.csv`：用 StratifiedGroupKFold 按 **group_id** 分组，约 20% 测试集，其余分 5 折（**交叉验证**），随机种子 42，保存前运行 `check_splits()`
-- **11/4**：中期报告的"数据划分"一小段交给 2 号
-- **11/8**：PyTorch 训练模板（训练循环、early stopping、padding mask、保存预测），放进 `src/`，给 5、6 号直接用
-- **11/13**：MLP 第一版（用自己的模板）
-- **11/21**：11/19 收齐每人能直接合并的代码，合并成**单个 notebook**，Restart & Run All 从头跑通不报错；记下运行时间和软硬件版本
-- 等谁：每人 11/19 交可合并的代码
-
-</details>
-
-<details>
-<summary><b>5 号 · YU Guanlin · TextCNN、文本向量、PPT 统一</b></summary>
-
-目标：把文本变成向量交给全组，最后把 6 个人的 PPT 统一成一套。
-
-- **11/8**：用同一个多语言 **SBERT**（**冻结**，不微调）在 `text_clean` 上做两份：句向量给 1–4 号，token 序列和 mask 给 5、6 号；按长度分布定 `max_len`
-- **11/10**：PPT 模板发群：配色、字体、每人几页
-- **11/13**：TextCNN 第一版：卷积核 2 / 3 / 4 / 5 各 100 个，dropout 0.5，用 4 号的训练模板
-- **11/21**：11/19 收齐每人的 PPT 页；11/20 统一格式，确认 12 分钟讲得完；11/21 组织排练并计时
-- 等谁：4 号训练模板（11/8）
-
-</details>
-
-<details>
-<summary><b>6 号 · Brain & Yang Qitian · BiLSTM、不平衡处理、报告统一</b></summary>
-
-目标：做最复杂的序列模型和不平衡处理，最后把 6 个人写的章节统一成一份报告。
-
-- **11/8**：建报告的共享 Word 文档：照老师模板的章节、图表编号和参考文献格式，每节标好负责人，发群
-- **11/13**：不平衡处理对比：不处理 / **class_weight / 过采样**（只在训练折里做），看 Macro-F1 和各类召回率，把最好的方案告诉全组
-- **11/13**：BiLSTM + Attention 第一版：用 4 号的训练模板，1–2 层，hidden 128
-- **11/17**：挑几条推文画**注意力热力图**
-- **11/22**：11/19 收齐各章节；11/20–11/21 统一格式（标题、图表编号、字体、参考文献），写摘要和结论；11/22 中午前提交报告、notebook 和 PPT
-- 等谁：4 号训练模板、5 号 token 序列（11/8）、各人章节（11/19）
-
-</details>
-
-### 关键时间点
-
-| 日期 | 必须完成 |
-|---|---|
-| 10/28 | 组会：确认分工，各自读完自己的任务 |
-| **10/29** | **4 号交数据划分**（全组都在等） |
-| 11/1 | 1 号 baseline 结果，3 号 EDA 6 张图 |
-| 11/4 | 1、3、4 号把中期报告各自部分交给 2 号 |
-| **11/6** | **2 号提交中期报告** |
-| 11/7（周六）14:25–15:00 | 答疑会面（已预约） |
-| 11/8 | 5 号交 SBERT 句向量和 token 序列，4 号交训练模板，6 号建好报告文档 |
-| 11/10 | 5 号发 PPT 模板 |
-| 11/13 | 6 个模型第一版；6 号给出不平衡处理结论 |
-| 11/15 | 全员交齐 OOF 和测试集预测 |
-| 11/18 | 实验冻结，之后不再改结果；1 号出总对比表和最终模型 |
-| 11/19 | 报告章节交 6 号，PPT 页交 5 号，可合并的代码交 4 号 |
-| 11/20–11/21 | 合并 notebook、统一报告和 PPT，11/21 排练 |
-| **11/22** | **6 号提交报告、notebook 和 PPT** |
-
-### 报告章节分配
-
-章节号和[报告模板](docs/materials/DSAI4205_Final_Report_Template.pdf)一一对应。每人 11/19 前把自己那几节写进 6 号建的共享文档。
-
-<details>
-<summary>展开全部章节</summary>
-
-| 章节 | 写什么 | 负责 |
-|---|---|---|
-| 摘要 | 一段话总结全文，加 4 个关键词（最后写） | 6 |
-| 1.1 | 背景和决策问题：谁会用这个系统，帮他做什么决定 | 6 |
-| 1.2 | 项目目标：分类任务、三个标签、怎样算成功 | 6 |
-| 1.3 | 数据集说明：来源、时间、一行代表什么、标签含义；表 1 概览、表 2 数据字典 | 2 |
-| 2.1 | 数据质量：缺失、重复、标签质量、文本长度（表 3）；标签来源一段由 2 号提供 | 3、2 |
-| 2.2–2.3 | 类别分布（图 1）、文本特征（图 2），以及对评估和预处理的影响 | 3 |
-| 3.1 | 数据清洗：每步操作、原因、影响行数、前后例子（表 4，草稿在 `docs/report_drafts/`） | 2 |
-| 3.2 | 实验设计：怎么划分、随机种子、分组、交叉验证、怎么防泄漏（表 5） | 4 |
-| 3.3 | 文本表示：分词、规范化、词形还原，每种嵌入怎么得到 | 2、5 |
-| 3.4 | Baseline 和 6 个模型：1 号写 baseline 和选模型规则，每人写自己模型一段 | 全员 |
-| 3.5 | 评估和运行环境：主指标和理由、计时方法、硬件和软件版本 | 4 |
-| 4.1 | 模型对比：同一标准下的成绩和训练时间（表 6）；不平衡处理一段由 6 号写 | 1、6 |
-| 4.2 | 测试集最终表现：每类成绩（表 7）、混淆矩阵（图 3） | 1 |
-| 4.3 | 错误分析：典型错例（表 8）、反复出现的错误规律、怎么改 | 2 |
-| 5.1 | 结果解读：结果说明了什么、为什么是这样 | 1 |
-| 5.2 | 决策支持流程：用户怎么用、模型输出什么、据此做什么、谁复核（图 4） | 6 |
-| 5.3 | 商业影响：有证据支撑的价值、误判会带来什么后果 | 3 |
-| 5.4 | 可扩展性：实测数据量、耗时、资源，放大后是否可行 | 4 |
-| 5.5 | 局限和改进：数据、标签、评估的局限，隐私和偏差 | 2 |
-| 5.6 | 结论：回答项目目标，给出建议 | 6 |
-| 参考文献 | 每人列出自己引用的，6 号统一格式 | 全员 |
-| 附录 A | 可复现记录：notebook 文件名、数据版本、环境、随机种子 | 4 |
-| 附录 B | 补充结果：正文放不下的表和图 | 全员 |
-| 附录 C | 项目开发：时间表、分工表、实验迭代记录摘要（评分里"项目文档"占 20%，模板没有单独章节） | 2 |
-
-</details>
-
-### PPT 讲述顺序（12 分钟）
-
-每人共讲 2 分钟，11/19 前按 5 号的模板做好自己的 1–2 页。提问环节由负责那部分的人回答。
-
-| 时间 | 谁 | 讲什么 |
-|---|---|---|
-| 0:00–1:00 | 6 | 开场：问题是什么、谁会用、我们做了什么 |
-| 1:00–2:00 | 3 | 数据长什么样：EDA 亮点 |
-| 2:00–4:00 | 2 | 清洗做了什么；标签其实来自 VADER |
-| 4:00–6:00 | 4 | 怎么保证公平比较（分组划分、防泄漏）；MLP |
-| 6:00–8:00 | 5 | 文本怎么变成向量；TextCNN |
-| 8:00–10:00 | 1 | 6 个模型 vs baseline、集成、最终模型 |
-| 10:00–11:00 | 3 | SHAP 和商业洞察 |
-| 11:00–12:00 | 6 | 注意力图、决策支持流程、结论 |
-
-### 名词速查
-
-前半部分来自老师的项目说明和报告模板（"出处"一列写了对应的评分占比），后半部分是我们组的约定和技术名词。
-
-<details>
-<summary>展开全部名词</summary>
-
-| 名词 | 意思 | 出处 |
-|---|---|---|
-| EDA（探索性数据分析） | 建模前用统计和图把数据摸清：数量、各类分布、文本长度、缺失、重复、变量之间的关系；至少 6 张统计图 | 项目说明 · EDA 与清洗 20% |
-| 数据粒度 | 一行数据代表什么。我们：一行 = 一条推文 | 项目说明 · EDA |
-| 类别不平衡 | 各类样本数相差大，模型会偏向多数类。我们：Positive 607 / Neutral 433 / Negative 485，最大比最小 1.40，轻度不平衡 | 项目说明 · EDA、Refinement |
-| 清洗日志 | 对数据的每处修改都记下规则、原因、影响行数、前后例子。我们：`data/clean_v2/clean_v2_log.md` | 项目说明 · 数据清洗 |
-| 规范化 / 分词 / 词形还原 | 统一成小写、去标点；把句子切成词；把词还原成原形（selling → sell）。我们：`text_norm` 已全部做完 | 项目说明 · 数据清洗 |
-| Baseline（阶段 3i） | 所有模型都要和它比的"及格线"，规定必须是 TF-IDF + 逻辑回归，报告 Accuracy、Precision、Recall、F1 | 项目说明 · Baseline 10% |
-| TF-IDF | 按"词在这条推文里出现得越多、在所有推文里越少见，分越高"给每个词打分。不算词嵌入，只能用在 baseline，也不能拿来给词向量加权 | 项目说明 · 高级建模 |
-| 词嵌入模型 | 把词或句子变成一组数字（向量）的模型，意思相近的文本向量也相近，例如 BERT、GloVe、Word2Vec、FastText。每个分析模型都要配一个 | 项目说明 · 高级建模 |
-| 嵌入和分类器分开 | 不能用一个模型同时做嵌入和分类，必须"嵌入模型 → 独立的分类器"，并在报告里写清两者怎么组合 | 项目说明 · 高级建模 |
-| N 个模型（阶段 3ii） | N = 组员人数 = 6，每人一个"嵌入 + 分类器"组合，逻辑回归不算在内 | 项目说明 · 高级建模 30% |
-| 从零训练 | 参数从随机开始、只用我们的数据训练。课外模型和从零训练的模型得分更高。我们：FastText、MLP、TextCNN、BiLSTM | 项目说明 · 高级建模 |
-| 对比 baseline（阶段 3iii） | 每个模型都和 baseline 比成绩，并解释为什么更好或更差 | 项目说明 · 建模 3iii |
-| 改进（阶段 3iv） | 调参、处理类别不平衡、做集成，然后再和 baseline 比一次 | 项目说明 · Refinement 10% |
-| 调参 | 超参数是训练前人为设定的值（SVM 的 C、kNN 的 k、学习率）。调参 = 试多组值选最好的；要留证据：试了哪些值、各得多少分 | 项目说明 · Refinement 10% |
-| 集成 / Stacking | 把多个模型的判断合起来。软投票 = 各模型概率取平均；Stacking = 把各模型的概率当输入，再训练一个"元模型"做最终判断 | 项目说明 · 3iv、创新 10% |
-| 特征工程 | 在常规清洗之外自己设计对预测有用的新变量。我们：`clean_v2` 已有 13 个特征列 | 项目说明 · 创新 10% |
-| 商业洞察 | 从分类结果得出原始数据里一眼看不出、对投资者或分析师有用的结论 | 项目说明 · 创新 10%；报告模板 5.3 |
-| 决策支持系统 | 项目的定位：模型输出要帮人做决定。报告 5.2 要画出"用户输入 → 模型输出 → 采取行动 → 谁来复核"的流程图 | 报告模板 5.2 |
-| Accuracy / Precision / Recall / F1 | 准确率：判对的比例；精确率：判成某类的推文里真是这类的比例；召回率：某类推文被找出来的比例；F1：精确率和召回率的综合 | 项目说明 · Baseline |
-| 混淆矩阵 | 3×3 表，行是真实类别、列是预测类别，看出模型把哪类错认成哪类 | 报告模板 4.2 |
-| 项目开发与文档 | 详细时间表、个人分工、实验和迭代过程的证据。我们：`docs/experiments/`、`docs/meetings/`，整理进报告附录 C | 项目说明 · 报告 20% |
-| 中期报告 | 第 10 周交，总结 EDA、清洗步骤和 baseline 结果，答疑时和老师讨论 | 项目说明 · 项目分的 20% |
-| 最终展示 | 12 分钟；评分看吸引听众、清楚连贯、表达、团队配合、回答问题；PPT 11/22 前交到 Blackboard | 项目说明 · 20% |
-| 单个 notebook | 全部代码放进一个带注释的 .ipynb 提交，`src/` 里的函数最后要复制进去 | 项目说明 |
-| 数据泄露 | 测试集的信息混进了训练，成绩虚高。例如重复推文一份在训练一份在测试、划分前做过采样、用含测试集的文本训练 FastText | 我们的约定 |
-| group_id / 分组划分 | 近似重复或同一模板的推文分在同一组，整组只能在一边；StratifiedGroupKFold 按组切分，同时保持每份的类别比例 | 我们的约定 |
-| 交叉验证 / 折 | 先留约 20% 做测试集，最后只用一次；其余分成 5 折轮流验证，调参和选模型看 5 次的平均成绩 | 我们的约定 · 报告模板 3.2 |
-| OOF 预测 | 每条训练推文的概率由训练时没见过它的那一折模型给出；Stacking 只能用它训练，否则等于看到答案 | 我们的约定 |
-| Macro-F1 | 三类各算 F1 再直接平均，每类同样重要；不平衡时比准确率公平，是全组的主指标 | 我们的约定 · 报告模板表 6 |
-| VADER | 按情感词典给句子打分的工具。标签和它一致率 93.0%（TextBlob 只有 60.2%），很可能就是它打的，所以绝不能当特征 | 我们的分析 · notebook 31 |
-| text_clean / text_norm | `text_clean` 保留大小写和标点，给 SBERT 和 token 序列；`text_norm` 小写、只留字母、词形还原、去停用词（保留 not、up、down），给 TF-IDF 和 FastText | `data/clean_v2` |
-| SBERT / 冻结 | SBERT 是预训练的句子编码模型；冻结 = 只用它算向量，参数不更新，这样"嵌入和分类器分开"没有争议 | 我们的方案 |
-| run_id | 每次实验的编号，把成绩、超参数和预测文件绑在一起，重跑不覆盖旧结果 | 我们的约定 |
-| class_weight / 过采样 | 处理不平衡：训练时少数类判错罚得更重 / 复制少数类样本；过采样只能在训练折里做 | 我们的约定 |
-| SHAP | 算出每个特征把一条预测往哪一类推了多少，找出最重要的特征 | 我们的方案 |
-| 注意力热力图 | 把 BiLSTM 给每个词的注意力权重涂成颜色，看模型判断时最看重哪些词 | 我们的方案 |
-
-</details>
-
-## 仓库结构
-
-每个文件夹里都有自己的 README，点进去可以看到详细说明（例如 notebook 的负责人对照表在 `notebooks/` 里）。
-
-```
-PolyU_DSAI4205_Group_Project/
-├─ README.md               项目说明、分工和运行方法
-├─ environment.yml         conda 环境配置，所有包固定版本
-├─ .gitignore              排除数据、嵌入和权重
-├─ .gitattributes          统一文本换行和文件类型
-├─ docs/                   课程资料、会议和实验记录、清洗日志、报告草稿
-├─ notebooks/              按 5 个阶段编号的 notebook，每人只改自己负责的
-├─ src/                    全组共用函数：路径和版本号、读取数据、评分、缓存、清洗、FastText
-├─ splits/          [4 号] 固定数据划分 folds_v1.csv，生成后不再修改
-├─ results/                每个模型的评分结果，每次实验一行，带 run_id
-├─ figures/                报告和 PPT 用图
-├─ reports/         [6 号] 已提交的报告和 PPT 存档
-└─ data/                   原始数据和各版本清洗结果（当前 clean_v2）；嵌入与预测缓存不进 Git
-```
-
-## 快速开始
-
-**1. 克隆仓库**
-
-```bash
-git clone https://github.com/Gu-kai-lei/PolyU_DSAI4205_Group_Project.git
-cd PolyU_DSAI4205_Group_Project
-```
-
-**2. 创建环境**
-
-```bash
-conda env create -f environment.yml
-conda activate dsai4205
-nbstripout --install
-```
-
-`nbstripout --install` 会在提交时自动清掉 notebook 的输出，避免合并冲突。每个人 clone 之后都要运行一次。
-
-有 NVIDIA 显卡的同学，再把 PyTorch 换成 CUDA 版本：
-
-```bash
-pip install torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/cu124
-```
-
-**3. 准备数据**
-
-原始数据已放在 `data/raw/stock_market_crash_2022.csv`，当前清洗版本放在 `data/clean_v2/`（数据、全量表、日志和生成脚本）。下载仓库后，`load_clean()` 默认直接读取这些文件。
-
-清洗数据的主要列：`id`（对齐所有文件的编号）、`group_id`（划分时同组不能拆开）、`label` / `label_name`、`text_clean`（给 SBERT 和 token 序列）、`text_norm`（给 TF-IDF 和 FastText），以及给 XGBoost 和 EDA 用的特征列。完整的列说明见 [clean_v2_log.md](data/clean_v2/clean_v2_log.md)。嵌入缓存和预测结果仍保留在本地或共享 Google Drive。
-
-如果要使用共享网盘，在网盘中保持相同目录结构，并设置 `DATA_ROOT`（PowerShell）：
-
-```powershell
-setx DATA_ROOT "G:\我的云端硬盘\DSAI4205-Data3"
-```
-
-设置后要重开终端才生效。Colab 用户在 notebook 里加一行：`os.environ["DATA_ROOT"] = "/content/drive/MyDrive/DSAI4205-Data3"`。共享文件夹要先在 Drive 里"添加快捷方式到我的云端硬盘"，Colab 才能读到。
-
-如果不设置 `DATA_ROOT`，代码会默认读取仓库里的 `data/` 文件夹，目录结构见 [data/README.md](data/README.md)。
-
-**4. 打开自己的 notebook**
-
-```bash
-jupyter lab
-```
-
-## 协作规则
-
-- 提交说明请使用中文，简要说明本次改动，方便组员在目录页和提交记录中查看。
-
-- 每个人在自己的分支上开发（例如 `m3-xgboost`），通过 Pull Request 合入 `main`。
-- 只改自己负责的 notebook。要改 `src/` 里的公共代码，先在群里说一声。
-- 每次实验先用 `new_run_id()` 生成一个 run_id。评分用 `evaluate(..., run_id=run_id, params=...)` 计算、`save_result(row, "m3_xgboost")` 保存；OOF 概率和测试集概率用 `save_preds(run_id, ...)` 保存。同一个 run_id 把成绩、超参数和预测文件绑在一起，重跑也不会覆盖旧结果。
-- 仓库只保留原始 CSV 和各版本清洗结果（`data/clean_vN/`）；嵌入缓存、预测结果、模型权重及其他本地数据不提交。
-- 每次实验记进 `docs/experiments/mN.md`，每周会议记进 `docs/meetings/`。这些是评分里"迭代过程证据"的来源。
-
-**数据和实验版本**
-
-当前版本号写在 `src/config.py`：`CLEAN_VERSION`（清洗数据）和 `SPLIT_VERSION`（数据划分）。每条评分记录和每个预测文件都会自动记下这两个版本和随机种子。
-
-| 改了什么 | 要做什么 |
-|---|---|
-| 清洗删了行、加了行，或者近似重复的分组（`group_id`）变了 | 升级 `CLEAN_VERSION` 和 `SPLIT_VERSION`，4 号重新生成划分，**所有模型重跑** |
-| 只改了文本处理方式，行和 `group_id` 都没变 | 升级 `CLEAN_VERSION`，划分沿用；用到这列文本的嵌入和模型重跑 |
-| 只改了自己模型的超参数 | 不升级版本，用新的 run_id 重跑自己的模型 |
-
-`load_splits(clean=...)` 会自动检查划分和清洗数据是否对得上，对不上会直接报错。
-
-新增清洗版本 N 时：新建 `data/clean_vN/` 放数据、全量表、日志和生成脚本，在 `.gitignore` 里放行这个文件夹，再把 `src/config.py` 的 `CLEAN_VERSION` 改成 N。
-
-**不能做的事**
-
-- 把 VADER 分数当特征：标签可能就是 VADER 生成的（待验证），用它当特征等于走捷径，相当于泄露标签。
-- 让近似重复的推文跨训练集和测试集：同一个 `group_id` 必须落在同一折。
-- 在划分之前做 SMOTE 或过采样：只能在训练折内做。
-- 用包含验证折的文本训练自训嵌入：FastText 等要按折训练，测试集文本任何时候都不参与训练。
-- 先划分再去重：必须先去重，否则重复样本会同时出现在训练集和测试集里。
-- 在 baseline 以外用 TF-IDF，包括用 TF-IDF 权重给词向量加权平均。
-
-**我们的实施方案**
-
-- Transformer 类模型（SBERT 等）只用来抽取嵌入、保持冻结，不和分类器一起微调。项目要求嵌入模型和分类模型相互独立，冻结能让这一点没有争议。是否允许微调，答疑时向老师确认。
-- 文本里的 `__` 只还原人工核对过的模式，其余直接删除并用 `emoji_lost` 标记（不用占位符，免得 Transformer 把占位符当成文字），每条规则都记进清洗日志。
-
-## 原始资料
-
-| 文件 | 内容 |
-|---|---|
-| [DSAI4205_Project_Description.pdf](docs/materials/DSAI4205_Project_Description.pdf) | 项目说明和评分标准 |
-| [DSAI4205_Final_Report_Template.pdf](docs/materials/DSAI4205_Final_Report_Template.pdf) | 最终报告模板 |
-| [Dataset3_Description.docx](docs/materials/Dataset3_Description.docx) | 数据集说明，包括标签编码 |
-
